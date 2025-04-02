@@ -52,6 +52,12 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".UserTypeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden" />
+
+        <activity
             android:name=".Dashboard"
             android:exported="false"
             android:screenOrientation="portrait"
