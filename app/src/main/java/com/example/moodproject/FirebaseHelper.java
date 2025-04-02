@@ -25,7 +25,7 @@ public class FirebaseHelper {
     }
 
     public interface TypeCallback{
-        void onTypesLoaded(UserType Type);
+        void onTypesLoaded(UserType userType);
         void onError(String errorMessage);
     }
 
@@ -63,7 +63,7 @@ public class FirebaseHelper {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         UserPreferences preferences = dataSnapshot.exists() ?
                                 dataSnapshot.getValue(UserPreferences.class) :
-                                new UserPreferences(false, false, false, false, false,false);
+                                new UserPreferences(false,false ,false, false, false, false);
 
                         callback.onPreferencesLoaded(preferences);
                     }
@@ -86,11 +86,18 @@ public class FirebaseHelper {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        UserType type = dataSnapshot.exists() ?
-                                dataSnapshot.getValue(UserType.class) :
-                                new UserType();
-
-                        callback.onTypesLoaded(type);
+                        if (dataSnapshot.exists()) {
+                            // Handle both string and legacy object format
+                            if (dataSnapshot.getValue() instanceof String) {
+                                String typeStr = dataSnapshot.getValue(String.class);
+                                callback.onTypesLoaded(new UserType(typeStr));
+                            } else {
+                                UserType type = dataSnapshot.getValue(UserType.class);
+                                callback.onTypesLoaded(type != null ? type : new UserType());
+                            }
+                        } else {
+                            callback.onTypesLoaded(new UserType());
+                        }
                     }
 
                     @Override
@@ -100,14 +107,15 @@ public class FirebaseHelper {
                 });
     }
 
-    public Task<Void> saveUserType(UserType type) {
+    public Task<Void> saveUserType(UserType userType) {
         String userId = getCurrentUserId();
         if (userId == null) {
             throw new IllegalStateException("User not authenticated");
         }
 
-        return mDatabase.child("user_type").child(userId).setValue(type);
+        return mDatabase.child("user_type").child(userId).setValue(userType.getType());
     }
+
     public Task<Void> saveUserPreferences(UserPreferences preferences) {
         String userId = getCurrentUserId();
         if (userId == null) {

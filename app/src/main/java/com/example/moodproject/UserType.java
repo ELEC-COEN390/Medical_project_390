@@ -1,28 +1,32 @@
 package com.example.moodproject;
 
+// UserType class that matches Firebase rules (string-based)
 public class UserType {
-
-    public UserType(){}
     private String type;
 
-    public UserType(Boolean type) {
-        if(!type) {
-            this.type = "Doctor";
-        }else{
-            this.type = "Patient";
-        }
+    // Required empty constructor for Firebase
+    public UserType() {
+        // Default value
+        this.type = "patient";
+    }
+
+    public UserType(String type) {
+        this.type = type.toLowerCase();
     }
 
     public String getType() {
         return type;
     }
 
-    public void setType(Boolean type) {
-        if(!type) {
-            this.type = "Doctor";
-        }else{
-            this.type = "Patient";
-        }
+    public void setType(String type) {
+        this.type = type.toLowerCase();
     }
 
+    public boolean isDoctor() {
+        return "doctor".equals(type);
+    }
+
+    public boolean isPatient() {
+        return "patient".equals(type);
+    }
 }

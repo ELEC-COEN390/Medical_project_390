@@ -48,14 +48,14 @@ public class UserTypeActivity extends AppCompatActivity {
         }
 
         doctorCard.setOnClickListener(v -> {
-            saveUserTypeToDatabase("Doctor");
+            saveUserTypeToDatabase("doctor");
             Intent intent = new Intent(UserTypeActivity.this,Dashboard.class);
             startActivity(intent);
             finish();
         });
 
         patientCard.setOnClickListener(v -> {
-            saveUserTypeToDatabase("Patient");
+            saveUserTypeToDatabase("patient");
             Intent intent = new Intent(UserTypeActivity.this, PreferencesActivity.class);
             startActivity(intent);
             finish();
@@ -66,10 +66,7 @@ public class UserTypeActivity extends AppCompatActivity {
     private void saveUserTypeToDatabase(String type) {
         // TODO: Replace with actual Firebase logic
         Toast.makeText(this, "Selected: " + type, Toast.LENGTH_SHORT).show();
-        boolean bool_type = false;
-        if(type.equals("Patient"))
-            bool_type = true;
-        firebaseHelper.saveUserType(new UserType(bool_type));
+        firebaseHelper.saveUserType(new UserType(type));
 
     }
 }
