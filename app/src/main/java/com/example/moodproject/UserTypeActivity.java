@@ -18,6 +18,7 @@ public class UserTypeActivity extends AppCompatActivity {
     private CardView doctorCard;
     private CardView patientCard;
     private VideoView videoBackground;
+    private FirebaseHelper firebaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +35,17 @@ public class UserTypeActivity extends AppCompatActivity {
         // Initialize CardViews
         doctorCard = findViewById(R.id.doctorCard);
         patientCard = findViewById(R.id.patientCard);
+
+        firebaseHelper = FirebaseHelper.getInstance();
+
+        // Check if user is signed in
+        if (firebaseHelper.getCurrentUser() == null) {
+            // Not signed in, redirect to login
+            Intent intent = new Intent(UserTypeActivity.this, login.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         doctorCard.setOnClickListener(v -> {
             saveUserTypeToDatabase("Doctor");
@@ -54,9 +66,10 @@ public class UserTypeActivity extends AppCompatActivity {
     private void saveUserTypeToDatabase(String type) {
         // TODO: Replace with actual Firebase logic
         Toast.makeText(this, "Selected: " + type, Toast.LENGTH_SHORT).show();
+        boolean bool_type = false;
+        if(type.equals("Patient"))
+            bool_type = true;
+        firebaseHelper.saveUserType(new UserType(bool_type));
 
-        // Example: Navigate or store in Firebase
-        // You can also call FirebaseAuth.getInstance().getCurrentUser().getUid()
-        // and store the user type in Realtime Database or Firestore here.
     }
 }
