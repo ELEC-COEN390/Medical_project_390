@@ -29,5 +29,9 @@
     <color name="other_red">#E53935</color>
     <color name="other_blue">#00B8D4</color>
     <color name="other_black">@android:color/darker_gray</color>
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color> <!-- Add this line -->
+    <color name="teal_200">#03DAC5</color>
+
 
 </resources>
