@@ -37,7 +37,7 @@ public class UserTypeActivity extends AppCompatActivity {
 
         doctorCard.setOnClickListener(v -> {
             saveUserTypeToDatabase("Doctor");
-            Intent intent = new Intent(UserTypeActivity.this,Dashboard.class);
+            Intent intent = new Intent(UserTypeActivity.this,DoctorDashboard.class);
             startActivity(intent);
             finish();
         });
