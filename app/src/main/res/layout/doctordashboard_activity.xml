@@ -1,85 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:openDrawer="start">
 
-    <LinearLayout
+    <!-- Main content -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:padding="0dp"
+        tools:context=".MainActivity">
 
+        <!-- Toolbar at the top -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="@color/purple_700"
+            android:elevation="4dp"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:title="Doctor Dashboard"
-            app:titleTextColor="@android:color/white"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:title="Doctor Dashboard" />
 
-        <LinearLayout
+        <!-- Content container with padding -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/contentContainer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="0dp"
+            android:padding="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toolbar">
 
+            <!-- Welcome Doctor Name -->
             <TextView
                 android:id="@+id/textViewDoctorName"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:elevation="4dp"
                 android:text="Welcome, Dr. Smith"
                 android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textColor="#333333"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-
-            <Button
-                android:id="@+id/buttonRefresh"
-                android:layout_width="match_parent"
+            <!-- Refresh Button With Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/refreshButtonCard"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Refresh Patient List"
-                android:backgroundTint="@color/purple_700"
-                android:textColor="@android:color/white"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginHorizontal="0dp"
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="4dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewDoctorName">
 
+                <Button
+                    android:id="@+id/buttonRefresh"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/purple_700"
+                    android:text="Refresh Patient List"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    app:cornerRadius="10dp" />
+            </androidx.cardview.widget.CardView>
+
+            <!-- Patients Label -->
             <TextView
                 android:id="@+id/textViewPatientsLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Unmatched Patients:"
                 android:textSize="18sp"
-                android:layout_marginTop="16dp"/>
+                android:textColor="@color/purple_700"
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/refreshButtonCard"
+                app:layout_constraintStart_toStartOf="parent" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerViewPatients"
-                android:layout_width="match_parent"
+            <!-- Patients Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/patientsCardView"
+                android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_weight="1"/>
-        </LinearLayout>
-    </LinearLayout>
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="4dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPatientsLabel">
 
-    <!-- FAB in bottom-right corner -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddPatient"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
-        android:contentDescription="Add Patient"
-        android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="@color/purple_700"
-        app:tint="@android:color/white"/>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewPatients"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="8dp"
+                    android:clipToPadding="false" />
+            </androidx.cardview.widget.CardView>
 
+            <!-- FloatingActionButton for adding patients -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:contentDescription="Add Patient"
+                android:src="@android:drawable/ic_input_add"
+                app:backgroundTint="@color/purple_700"
+                app:tint="@android:color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Navigation Drawer -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header"
         app:menu="@menu/doctordashboard_drawer_menu" />
 
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
-
+</androidx.drawerlayout.widget.DrawerLayout>
