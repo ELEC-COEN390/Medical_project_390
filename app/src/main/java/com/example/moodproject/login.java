@@ -1,5 +1,6 @@
 package com.example.moodproject;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -40,6 +41,7 @@ public class login extends AppCompatActivity {
     // Firebase Authentication
     private FirebaseAuth mAuth;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

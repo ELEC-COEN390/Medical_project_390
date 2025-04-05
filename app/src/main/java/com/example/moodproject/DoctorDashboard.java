@@ -2,9 +2,11 @@ package com.example.moodproject;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -24,11 +26,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import android.net.Uri;
+import android.widget.VideoView;
+
 
 public class DoctorDashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -43,11 +51,15 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
     private NavigationView navigationView;
     private Toolbar toolbar;
 
+    VideoView videoBackground;
+
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.doctordashboard_activity);
+
 
         // Initialize UI components
         textViewDoctorName = findViewById(R.id.textViewDoctorName);
@@ -55,8 +67,20 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         recyclerViewPatients = findViewById(R.id.recyclerViewPatients);
         fabAddPatient = findViewById(R.id.fabAddPatient);
 
+
+
+        // Initialize VideoView
+        videoBackground = findViewById(R.id.videoBackground);
+
+        makeFullScreen();
+
         // Set up toolbar and navigation drawer
         setupNavigationDrawer();
+
+        // Setup video background
+        setupVideoBackground();
+
+
 
         // Welcome message
         textViewDoctorName.setText("Welcome, Dr. Smith");
@@ -259,4 +283,68 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
             super.onBackPressed();
         }
     }
+
+    private void makeFullScreen() {
+        // Make the activity full screen
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        // Hide the status bar and navigation bar
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(),
+                getWindow().getDecorView());
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        controller.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+
+        // Add these flags for older Android versions
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Resume video when activity comes back to foreground
+        if (videoBackground != null && !videoBackground.isPlaying()) {
+            videoBackground.start();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pause video when activity is not visible
+        if (videoBackground != null && videoBackground.isPlaying()) {
+            videoBackground.pause();
+        }
+    }
+
+    private void setupVideoBackground() {
+        try {
+            // Path to the video file in raw folder
+            Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/raw/wave");
+            videoBackground.setVideoURI(videoUri);
+
+            // Loop the video
+            videoBackground.setOnPreparedListener(mp -> {
+                mp.setLooping(true);
+                mp.setVolume(0, 0); // Mute the video
+
+                // Optional: scale the video
+                mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            });
+
+            // Start playing the video
+            videoBackground.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error playing video background", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
+
 }
