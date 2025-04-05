@@ -86,11 +86,23 @@ public class FirebaseHelper {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        UserType type = dataSnapshot.exists() ?
-                                dataSnapshot.getValue(UserType.class) :
-                                new UserType();
-
-                        callback.onTypesLoaded(type);
+                        if (dataSnapshot.exists()) {
+                            // Check if the value is a string
+                            if (dataSnapshot.getValue() instanceof String) {
+                                String typeStr = dataSnapshot.getValue(String.class);
+                                UserType type = new UserType(typeStr);
+                                callback.onTypesLoaded(type);
+                            } else {
+                                // Try to get it as UserType object
+                                UserType type = dataSnapshot.getValue(UserType.class);
+                                if (type == null) {
+                                    type = new UserType();
+                                }
+                                callback.onTypesLoaded(type);
+                            }
+                        } else {
+                            callback.onTypesLoaded(new UserType());
+                        }
                     }
 
                     @Override
@@ -106,8 +118,10 @@ public class FirebaseHelper {
             throw new IllegalStateException("User not authenticated");
         }
 
-        return mDatabase.child("user_type").child(userId).setValue(type.getType());
+        // Save as UserType object instead of just the string
+        return mDatabase.child("user_type").child(userId).setValue(type);
     }
+
     public Task<Void> saveUserPreferences(UserPreferences preferences) {
         String userId = getCurrentUserId();
         if (userId == null) {

@@ -41,6 +41,8 @@ public class login extends AppCompatActivity {
     // Firebase Authentication
     private FirebaseAuth mAuth;
 
+    private  FirebaseHelper db;
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,7 @@ public class login extends AppCompatActivity {
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseHelper.getInstance();
 
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
@@ -205,23 +208,60 @@ public class login extends AppCompatActivity {
 
         // Show progress (you can add a progress dialog here)
 
-        // Sign in with email and password
         mAuth.signInWithEmailAndPassword(emailText, passwordText)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
+                            // Sign in success
                             FirebaseUser user = mAuth.getCurrentUser();
-                            Toast.makeText(login.this, "Login successful",
-                                    Toast.LENGTH_SHORT).show();
 
-                            // Navigate to dashboard or main activity
-                            Intent intent = new Intent(login.this, Dashboard.class); // Create a dashboard activity
-                            startActivity(intent);
-                            finish(); // Close this activity
+                            db.getUserType(new FirebaseHelper.TypeCallback() {
+                                @Override
+                                public void onTypesLoaded(UserType userType) {
+                                    // First check if userType is null
+                                    if (userType == null) {
+                                        Toast.makeText(login.this, "UserType is null", Toast.LENGTH_LONG).show();
+                                        startActivity(new Intent(login.this, Dashboard.class));
+                                        finish();
+                                        return;
+                                    }
+
+                                    // Then check if getType() returns null or empty
+                                    String type = userType.getType();
+                                    if (type == null || type.isEmpty()) {
+                                        Toast.makeText(login.this, "Type is null or empty", Toast.LENGTH_LONG).show();
+                                        startActivity(new Intent(login.this, Dashboard.class));
+                                        finish();
+                                        return;
+                                    }
+
+                                    // Debug toast to see the actual type value
+                                    Toast.makeText(login.this, "User type: " + type, Toast.LENGTH_LONG).show();
+
+                                    // Navigation logic
+                                    Intent intent;
+                                    if ("doctor".equals(type.toLowerCase().trim())) {
+                                        intent = new Intent(login.this, DoctorDashboard.class);
+                                    } else {
+                                        intent = new Intent(login.this, Dashboard.class);
+                                    }
+                                    startActivity(intent);
+                                    finish();
+                                }
+
+                                @Override
+                                public void onError(String errorMessage) {
+                                    // Handle error
+                                    Toast.makeText(login.this, "Error getting user type: " + errorMessage, Toast.LENGTH_SHORT).show();
+                                    // Default navigation on error
+                                    Intent intent = new Intent(login.this, Dashboard.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            });
                         } else {
-                            // If sign in fails, display a message to the user.
+                            // Authentication failed
                             Toast.makeText(login.this, "Authentication failed: " + task.getException().getMessage(),
                                     Toast.LENGTH_SHORT).show();
                         }

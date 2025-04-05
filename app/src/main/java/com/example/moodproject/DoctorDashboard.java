@@ -54,7 +54,6 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
     VideoView videoBackground;
 
 
-    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
