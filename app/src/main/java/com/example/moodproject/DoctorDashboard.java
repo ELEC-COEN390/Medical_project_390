@@ -30,12 +30,18 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import android.net.Uri;
 import android.widget.VideoView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
 
 
 public class DoctorDashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -59,12 +65,25 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         super.onCreate(savedInstanceState);
         setContentView(R.layout.doctordashboard_activity);
 
-
         // Initialize UI components
         textViewDoctorName = findViewById(R.id.textViewDoctorName);
         buttonRefresh = findViewById(R.id.buttonRefresh);
         recyclerViewPatients = findViewById(R.id.recyclerViewPatients);
         fabAddPatient = findViewById(R.id.fabAddPatient);
+
+        recyclerViewPatients.setLayoutManager(new LinearLayoutManager(this));
+        List<Patient> dummyPatients = new ArrayList<>();
+        dummyPatients.add(new Patient("12345", "John Doe", 30));
+        dummyPatients.add(new Patient("67890", "Jane Smith", 27));
+        dummyPatients.add(new Patient("24680", "Alan Walker", 40));
+
+        PatientAdapter adapter = new PatientAdapter(dummyPatients);
+        recyclerViewPatients.setAdapter(adapter);
+
+
+
+
+
 
 
 
