@@ -7,9 +7,17 @@ public class UserType {
 
     public UserType(Boolean type) {
         if(!type) {
-            this.type = "Doctor";
+            this.type = "doctor";
         }else{
-            this.type = "Patient";
+            this.type = "patient";
+        }
+    }
+
+    public UserType(String type) {
+        if(type.equals("doctor")) {
+            this.type = "doctor";
+        }else{
+            this.type = "patient";
         }
     }
 
@@ -19,9 +27,9 @@ public class UserType {
 
     public void setType(Boolean type) {
         if(!type) {
-            this.type = "Doctor";
+            this.type = "doctor";
         }else{
-            this.type = "Patient";
+            this.type = "patient";
         }
     }
 
