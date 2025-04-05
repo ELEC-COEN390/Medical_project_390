@@ -106,7 +106,7 @@ public class FirebaseHelper {
             throw new IllegalStateException("User not authenticated");
         }
 
-        return mDatabase.child("user_type").child(userId).setValue(type);
+        return mDatabase.child("user_type").child(userId).setValue(type.getType());
     }
     public Task<Void> saveUserPreferences(UserPreferences preferences) {
         String userId = getCurrentUserId();
