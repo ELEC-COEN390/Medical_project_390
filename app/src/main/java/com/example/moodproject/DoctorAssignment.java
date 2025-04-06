@@ -1,12 +1,10 @@
 package com.example.moodproject;
 
-import java.util.Date;
-
 public class DoctorAssignment {
     private String doctorId;
     private String patientId;
-    private String doctorName;
-    private String patientName;
+    private String doctorEmail;
+    private String patientEmail;
 
 
 
@@ -14,11 +12,11 @@ public class DoctorAssignment {
     public DoctorAssignment() {
     }
 
-    public DoctorAssignment(String doctorId, String patientId, String doctorName, String patientName) {
+    public DoctorAssignment(String doctorId, String patientId, String doctorEmail, String patientEmail) {
         this.doctorId = doctorId;
         this.patientId = patientId;
-        this.doctorName = doctorName;
-        this.patientName = patientName;
+        this.doctorEmail = doctorEmail;
+        this.patientEmail = patientEmail;
     }
 
     // Getters and setters
@@ -38,20 +36,20 @@ public class DoctorAssignment {
         this.patientId = patientId;
     }
 
-    public String getDoctorName() {
-        return doctorName;
+    public String getDoctorEmail() {
+        return doctorEmail;
     }
 
-    public void setDoctorName(String doctorName) {
-        this.doctorName = doctorName;
+    public void setDoctorEmail(String doctorEmail) {
+        this.doctorEmail = doctorEmail;
     }
 
-    public String getPatientName() {
-        return patientName;
+    public String getPatientEmail() {
+        return patientEmail;
     }
 
-    public void setPatientName(String patientName) {
-        this.patientName = patientName;
+    public void setPatientEmail(String patientEmail) {
+        this.patientEmail = patientEmail;
     }
 
 }

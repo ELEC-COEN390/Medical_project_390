@@ -23,7 +23,6 @@ public class UserTypeActivity extends AppCompatActivity {
     private CardView patientCard;
     private VideoView videoBackground;
 
-
     private FirebaseHelper db;
 
     @Override
@@ -49,25 +48,39 @@ public class UserTypeActivity extends AppCompatActivity {
 
         doctorCard.setOnClickListener(v -> {
             saveUserTypeToDatabase("doctor");
-            Intent intent = new Intent(UserTypeActivity.this,DoctorDashboard.class);
-            startActivity(intent);
-            finish();
         });
 
         patientCard.setOnClickListener(v -> {
             saveUserTypeToDatabase("patient");
-            Intent intent = new Intent(UserTypeActivity.this, PreferencesActivity.class);
-            startActivity(intent);
-            finish();
         });
     }
 
-
     private void saveUserTypeToDatabase(String type) {
-        // TODO: Replace with actual Firebase logic
-        Toast.makeText(this, "Selected: " + type, Toast.LENGTH_SHORT).show();
+        // Show processing message
+        Toast.makeText(this, "Processing your selection: " + type, Toast.LENGTH_SHORT).show();
 
-        db.saveUserType(new UserType(type));
+        // Create the UserType object
+        UserType userType = new UserType(type);
+
+        // Use the correct method that handles adding patients to unmatched list
+        db.saveUserTypeAndHandlePatient(userType)
+                .addOnSuccessListener(aVoid -> {
+                    // After successful save, navigate based on user type
+                    if (type.equals("doctor")) {
+                        Intent intent = new Intent(UserTypeActivity.this, DoctorDashboard.class);
+                        startActivity(intent);
+                    } else { // patient
+                        Intent intent = new Intent(UserTypeActivity.this, PreferencesActivity.class);
+                        startActivity(intent);
+                    }
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    // Show error message if saving fails
+                    Toast.makeText(UserTypeActivity.this,
+                            "Error saving user type: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
     }
 
     private void makeFullScreen() {
@@ -95,20 +108,14 @@ public class UserTypeActivity extends AppCompatActivity {
             videoBackground.setVideoURI(videoUri);
 
             // Loop the video
-            videoBackground.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mp.setLooping(true);
-                    mp.setVolume(0, 0); // Mute the video
-                }
+            videoBackground.setOnPreparedListener(mp -> {
+                mp.setLooping(true);
+                mp.setVolume(0, 0); // Mute the video
             });
 
             // Handle video completion
-            videoBackground.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    videoBackground.start(); // Restart the video when it ends
-                }
+            videoBackground.setOnCompletionListener(mp -> {
+                videoBackground.start(); // Restart the video when it ends
             });
 
             // Start playing the video

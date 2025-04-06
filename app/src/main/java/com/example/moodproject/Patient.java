@@ -1,17 +1,17 @@
 package com.example.moodproject;
 
-public class Patient {
+public class Patient{
     private String id;
-    private String name;
-    private int age;
+    private String email;
 
-    public Patient(String id, String name, int age) {
+
+    public Patient(String id, String email) {
         this.id = id;
-        this.name = name;
-        this.age = age;
+        this.email = email;
     }
 
     public String getId() { return id; }
-    public String getName() { return name; }
-    public int getAge() { return age; }
+    public String getEmail() { return email; }
+
+
 }

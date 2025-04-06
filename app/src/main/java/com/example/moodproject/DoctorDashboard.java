@@ -1,6 +1,5 @@
 package com.example.moodproject;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -8,7 +7,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.EditText;
@@ -44,7 +42,7 @@ import java.util.List;
 
 
 
-public class DoctorDashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class DoctorDashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,PatientAdapter.OnPatientClickListener {
 
     TextView textViewDoctorName;
     Button buttonRefresh;
@@ -59,6 +57,8 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
 
     VideoView videoBackground;
 
+    private FirebaseHelper db;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,21 +71,11 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         recyclerViewPatients = findViewById(R.id.recyclerViewPatients);
         fabAddPatient = findViewById(R.id.fabAddPatient);
 
+        db = FirebaseHelper.getInstance();
+
         recyclerViewPatients.setLayoutManager(new LinearLayoutManager(this));
-        List<Patient> dummyPatients = new ArrayList<>();
-        dummyPatients.add(new Patient("12345", "John Doe", 30));
-        dummyPatients.add(new Patient("67890", "Jane Smith", 27));
-        dummyPatients.add(new Patient("24680", "Alan Walker", 40));
 
-        PatientAdapter adapter = new PatientAdapter(dummyPatients);
-        recyclerViewPatients.setAdapter(adapter);
-
-
-
-
-
-
-
+        fetchMatchedPatients();
 
         // Initialize VideoView
         videoBackground = findViewById(R.id.videoBackground);
@@ -123,6 +113,109 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         });
     }
 
+    private void fetchMatchedPatients() {
+        // Show loading message
+        Toast.makeText(this, "Fetching matched patients...", Toast.LENGTH_SHORT).show();
+
+        // Use Firebase Helper to get matched patients
+        db.getMatchedPatients(new FirebaseHelper.PatientsListCallback() {
+            @Override
+            public void onPatientsLoaded(List<DoctorAssignment> assignments) {
+                // Convert DoctorAssignment list to Patient list for the adapter
+                List<Patient> matchedPatients = new ArrayList<>();
+
+                for (DoctorAssignment assignment : assignments) {
+                    Patient patient = new Patient(
+                            assignment.getPatientId(),
+                            assignment.getPatientEmail()
+                    );
+                    matchedPatients.add(patient);
+                }
+
+                // Update the RecyclerView with matched patients
+                refreshRecycleViewMatch(matchedPatients);
+
+                // Update UI to indicate matched patients are being displayed
+                textViewDoctorName.setText("Your Patients");
+
+                // Show empty state message if no patients
+                if (matchedPatients.isEmpty()) {
+                    Toast.makeText(DoctorDashboard.this,
+                            "You don't have any assigned patients yet",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(DoctorDashboard.this,
+                        "Error loading patients: " + errorMessage,
+                        Toast.LENGTH_SHORT).show();
+
+                // Show empty list on error
+                refreshRecycleViewMatch(new ArrayList<>());
+            }
+        });
+    }
+
+    private void fetchUnmatchedPatients() {
+        // Show loading message
+        Toast.makeText(this, "Fetching unmatched patients...", Toast.LENGTH_SHORT).show();
+
+        // Use Firebase Helper to get unmatched patients
+        db.getUnmatchedPatients(new FirebaseHelper.PatientsListCallback() {
+            @Override
+            public void onPatientsLoaded(List<DoctorAssignment> assignments) {
+                // Convert DoctorAssignment list to Patient list for the adapter
+                List<Patient> unmatchedPatients = new ArrayList<>();
+
+                for (DoctorAssignment assignment : assignments) {
+                    Patient patient = new Patient(
+                            assignment.getPatientId(),
+                            assignment.getPatientEmail()
+                    );
+                    unmatchedPatients.add(patient);
+                }
+
+                // Update the RecyclerView with unmatched patients
+                refreshRecycleViewUnmatched(unmatchedPatients);
+
+                // Update UI to indicate unmatched patients are being displayed
+                textViewDoctorName.setText("Unmatched Patients");
+
+                // Show empty state message if no patients
+                if (unmatchedPatients.isEmpty()) {
+                    Toast.makeText(DoctorDashboard.this,
+                            "There are no unmatched patients at this time",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(DoctorDashboard.this,
+                        "Error loading patients: " + errorMessage,
+                        Toast.LENGTH_SHORT).show();
+
+                // Show empty list on error
+                refreshRecycleViewUnmatched(new ArrayList<>());
+            }
+        });
+    }
+
+    private void refreshRecycleViewMatch(List<Patient> dummyPatients){
+
+        PatientAdapter adapter = new PatientAdapter(dummyPatients, this);
+        recyclerViewPatients.setAdapter(adapter);
+
+    }
+
+    private void refreshRecycleViewUnmatched(List<Patient> dummyPatients){
+
+        PatientAdapter adapter = new PatientAdapter(dummyPatients, this);
+        recyclerViewPatients.setAdapter(adapter);
+
+    }
     private void setupNavigationDrawer() {
         // Initialize components
         toolbar = findViewById(R.id.toolbar);
@@ -162,13 +255,10 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
             // Launch history activity
             // Intent intent = new Intent(this, HistoryActivity.class);
             // startActivity(intent);
-        } else if (id == R.id.nav_wifi_settings) {
-            Toast.makeText(this, "WiFi Settings", Toast.LENGTH_SHORT).show();
-            // Open WiFi settings
-            startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
-        } else if (id == R.id.nav_connection) {
-            Toast.makeText(this, "Connection Settings", Toast.LENGTH_SHORT).show();
-            // Show connection dialog or activity
+        } else if (id == R.id.nav_unmatched) {
+            fetchUnmatchedPatients();
+        } else if (id == R.id.nav_matched) {
+            fetchMatchedPatients();
         } else if (id == R.id.nav_about) {
             Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
             // Show about dialog
@@ -357,6 +447,28 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Error playing video background", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Implement the OnPatientClickListener interface method
+    @Override
+    public void onPatientClick(Patient patient, int position) {
+        Toast.makeText(this, "Patient selected", Toast.LENGTH_SHORT).show();
+
+        // Check if we're viewing unmatched patients
+        String currentView = textViewDoctorName.getText().toString();
+
+        if (currentView.equals("Unmatched Patients")) {
+            // If viewing unmatched patients, show confirmation dialog for assignment
+                            db.assignPatientToDoctor(patient.getId(), patient.getEmail());
+        } else {
+            // If viewing matched patients, show patient details
+            // Jasper's part - intent to another activity
+            // Example:
+/*            Intent intent = new Intent(this, PatientDetailActivity.class);
+            intent.putExtra("PATIENT_ID", patient.getId());
+            intent.putExtra("PATIENT_EMAIL", patient.getEmail());
+            startActivity(intent);*/
         }
     }
 

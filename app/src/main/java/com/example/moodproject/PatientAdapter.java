@@ -12,16 +12,38 @@ import java.util.List;
 public class PatientAdapter extends RecyclerView.Adapter<PatientAdapter.PatientViewHolder> {
 
     private List<Patient> patientList;
+    private OnPatientClickListener onPatientClickListener;
 
+    // Interface for click listener
+    public interface OnPatientClickListener {
+
+        // Implement the OnPatientClickListener interface method
+        void onPatientClick(Patient patient, int position);
+    }
+
+    // Constructor with click listener
+    public PatientAdapter(List<Patient> patientList, OnPatientClickListener listener) {
+        this.patientList = patientList;
+        this.onPatientClickListener = listener;
+    }
+
+    // Constructor without click listener for backward compatibility
     public PatientAdapter(List<Patient> patientList) {
         this.patientList = patientList;
     }
 
+    // Set click listener after initialization if needed
+    public void setOnPatientClickListener(OnPatientClickListener listener) {
+        this.onPatientClickListener = listener;
+    }
+
     public static class PatientViewHolder extends RecyclerView.ViewHolder {
         TextView textName, textId, textAge;
+        View itemView;
 
         public PatientViewHolder(View itemView) {
             super(itemView);
+            this.itemView = itemView;
             textName = itemView.findViewById(R.id.textPatientName);
             textId = itemView.findViewById(R.id.textPatientID);
             textAge = itemView.findViewById(R.id.textPatientAge);
@@ -38,9 +60,16 @@ public class PatientAdapter extends RecyclerView.Adapter<PatientAdapter.PatientV
     @Override
     public void onBindViewHolder(PatientViewHolder holder, int position) {
         Patient patient = patientList.get(position);
-        holder.textName.setText(patient.getName());
+        holder.textName.setText(patient.getEmail());
         holder.textId.setText("ID: " + patient.getId());
-        holder.textAge.setText("Age: " + patient.getAge());
+        holder.textAge.setText("Email: " + patient.getEmail());
+
+        // Set click listener for the entire item view
+        holder.itemView.setOnClickListener(v -> {
+            if (onPatientClickListener != null) {
+                onPatientClickListener.onPatientClick(patient, position);
+            }
+        });
     }
 
     @Override
