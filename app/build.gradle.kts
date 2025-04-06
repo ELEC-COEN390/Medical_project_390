@@ -70,6 +70,8 @@ dependencies {
 
     // For handling JSON responses from Vosk
     implementation("org.json:json:20210307")
+    implementation(libs.glide)
+    annotationProcessor(libs.glideCompiler)
 }
 
 // Make sure you have the jcenter repository in your project-level settings.gradle.kts file
