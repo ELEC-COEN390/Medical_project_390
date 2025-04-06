@@ -134,7 +134,7 @@
                 android:text="Tap to Speak 🗣️"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/navy"
+                android:textColor="#213857"
                 android:layout_marginTop="24dp"
                 app:layout_constraintTop_toBottomOf="@id/connectButtonCard"
                 app:layout_constraintStart_toStartOf="parent"

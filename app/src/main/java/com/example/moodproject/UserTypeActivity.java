@@ -1,6 +1,7 @@
 package com.example.moodproject;
 
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -16,13 +17,14 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-import android.media.MediaPlayer;
-
 public class UserTypeActivity extends AppCompatActivity {
 
     private CardView doctorCard;
     private CardView patientCard;
     private VideoView videoBackground;
+
+
+    private FirebaseHelper db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,24 +41,33 @@ public class UserTypeActivity extends AppCompatActivity {
         // Initialize CardViews
         doctorCard = findViewById(R.id.doctorCard);
         patientCard = findViewById(R.id.patientCard);
-
-        // Initialize VideoView
         videoBackground = findViewById(R.id.videoBackground);
+
         setupVideoBackground();
 
+        db = FirebaseHelper.getInstance();
+
         doctorCard.setOnClickListener(v -> {
-            saveUserTypeToDatabase("Doctor");
-            Intent intent = new Intent(UserTypeActivity.this, Dashboard.class);
+            saveUserTypeToDatabase("doctor");
+            Intent intent = new Intent(UserTypeActivity.this,DoctorDashboard.class);
             startActivity(intent);
             finish();
         });
 
         patientCard.setOnClickListener(v -> {
-            saveUserTypeToDatabase("Patient");
+            saveUserTypeToDatabase("patient");
             Intent intent = new Intent(UserTypeActivity.this, PreferencesActivity.class);
             startActivity(intent);
             finish();
         });
+    }
+
+
+    private void saveUserTypeToDatabase(String type) {
+        // TODO: Replace with actual Firebase logic
+        Toast.makeText(this, "Selected: " + type, Toast.LENGTH_SHORT).show();
+
+        db.saveUserType(new UserType(type));
     }
 
     private void makeFullScreen() {
@@ -79,42 +90,45 @@ public class UserTypeActivity extends AppCompatActivity {
 
     private void setupVideoBackground() {
         try {
-            // Set the video path - make sure 'wave.mp4' is in your raw folder
-            String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.wave;
-            videoBackground.setVideoURI(Uri.parse(videoPath));
+            // Path to the video file in raw folder
+            Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/raw/wave");
+            videoBackground.setVideoURI(videoUri);
 
-            // Set video properties
-            videoBackground.setOnPreparedListener(mp -> {
-                // Loop the video
-                mp.setLooping(true);
+            // Loop the video
+            videoBackground.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mp.setLooping(true);
+                    mp.setVolume(0, 0); // Mute the video
+                }
+            });
 
-                // Mute the video
-                mp.setVolume(0.0f, 0.0f);
-
-                // Scale the video to fill the view
-                mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            // Handle video completion
+            videoBackground.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    videoBackground.start(); // Restart the video when it ends
+                }
             });
 
             // Start playing the video
             videoBackground.start();
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Error playing video background", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
+        // Re-hide system bars when returning to the activity
         makeFullScreen();
-        // Resume video playback when activity comes back to foreground
+
+        // Resume video playback when activity comes to foreground
         if (videoBackground != null && !videoBackground.isPlaying()) {
             videoBackground.start();
         }
     }
-
-
 
     @Override
     protected void onPause() {
@@ -125,12 +139,12 @@ public class UserTypeActivity extends AppCompatActivity {
         }
     }
 
-    private void saveUserTypeToDatabase(String type) {
-        // TODO: Replace with actual Firebase logic
-        Toast.makeText(this, "Selected: " + type, Toast.LENGTH_SHORT).show();
-
-        // Example: Navigate or store in Firebase
-        // You can also call FirebaseAuth.getInstance().getCurrentUser().getUid()
-        // and store the user type in Realtime Database or Firestore here.
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up resources
+        if (videoBackground != null) {
+            videoBackground.stopPlayback();
+        }
     }
 }

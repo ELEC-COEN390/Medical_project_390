@@ -1,28 +1,24 @@
 package com.example.moodproject;
 
 public class UserType {
-
-    public UserType(){}
     private String type;
 
-    public UserType(Boolean type) {
-        if(!type) {
-            this.type = "Doctor";
-        }else{
-            this.type = "Patient";
-        }
+    // Required empty constructor for Firebase
+    public UserType() {
+        this.type = "";
     }
 
+    // Constructor with type parameter
+    public UserType(String type) {
+        this.type = type;
+    }
+
+    // Getter and setter
     public String getType() {
         return type;
     }
 
-    public void setType(Boolean type) {
-        if(!type) {
-            this.type = "Doctor";
-        }else{
-            this.type = "Patient";
-        }
+    public void setType(String type) {
+        this.type = type;
     }
-
 }

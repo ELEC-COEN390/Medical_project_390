@@ -64,6 +64,10 @@ dependencies {
     // Vosk library for offline speech recognition
     implementation("com.alphacephei:vosk-android:0.3.47")
 
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
+    implementation("com.google.zxing:core:3.5.2")
+
     // For handling JSON responses from Vosk
     implementation("org.json:json:20210307")
 }
