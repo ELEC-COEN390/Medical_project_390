@@ -158,59 +158,8 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         });
     }
 
-    private void fetchUnmatchedPatients() {
-        // Show loading message
-        Toast.makeText(this, "Fetching unmatched patients...", Toast.LENGTH_SHORT).show();
-
-        // Use Firebase Helper to get unmatched patients
-        db.getUnmatchedPatients(new FirebaseHelper.PatientsListCallback() {
-            @Override
-            public void onPatientsLoaded(List<DoctorAssignment> assignments) {
-                // Convert DoctorAssignment list to Patient list for the adapter
-                List<Patient> unmatchedPatients = new ArrayList<>();
-
-                for (DoctorAssignment assignment : assignments) {
-                    Patient patient = new Patient(
-                            assignment.getPatientId(),
-                            assignment.getPatientEmail()
-                    );
-                    unmatchedPatients.add(patient);
-                }
-
-                // Update the RecyclerView with unmatched patients
-                refreshRecycleViewUnmatched(unmatchedPatients);
-
-                // Update UI to indicate unmatched patients are being displayed
-                textViewDoctorName.setText("Unmatched Patients");
-
-                // Show empty state message if no patients
-                if (unmatchedPatients.isEmpty()) {
-                    Toast.makeText(DoctorDashboard.this,
-                            "There are no unmatched patients at this time",
-                            Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onError(String errorMessage) {
-                Toast.makeText(DoctorDashboard.this,
-                        "Error loading patients: " + errorMessage,
-                        Toast.LENGTH_SHORT).show();
-
-                // Show empty list on error
-                refreshRecycleViewUnmatched(new ArrayList<>());
-            }
-        });
-    }
 
     private void refreshRecycleViewMatch(List<Patient> dummyPatients){
-
-        PatientAdapter adapter = new PatientAdapter(dummyPatients, this);
-        recyclerViewPatients.setAdapter(adapter);
-
-    }
-
-    private void refreshRecycleViewUnmatched(List<Patient> dummyPatients){
 
         PatientAdapter adapter = new PatientAdapter(dummyPatients, this);
         recyclerViewPatients.setAdapter(adapter);
@@ -255,8 +204,6 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
             // Launch history activity
             // Intent intent = new Intent(this, HistoryActivity.class);
             // startActivity(intent);
-        } else if (id == R.id.nav_unmatched) {
-            fetchUnmatchedPatients();
         } else if (id == R.id.nav_matched) {
             fetchMatchedPatients();
         } else if (id == R.id.nav_about) {
@@ -300,7 +247,7 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         btnScan.setOnClickListener(v -> {
             dialog.dismiss();
             Toast.makeText(this, "Scan QR Code selected", Toast.LENGTH_SHORT).show();
-            String qrData = "Patient ID: 12345\nName: John Doe\nAge: 30"; // Replace with real patient data if needed
+            String qrData = "";
             showQRDisplayDialog(qrData);
         });
 
