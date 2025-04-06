@@ -19,11 +19,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Add New Patient"
+        android:textColor="@android:color/white"
+        android:backgroundTint="#213857"
         android:layout_marginBottom="12dp"/>
 
     <Button
         android:id="@+id/buttonScanQR"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan Patient QR Code"/>
+        android:text="Scan Patient QR Code"
+        android:textColor="@android:color/white"
+        android:backgroundTint="#213857" />
+
 </LinearLayout>

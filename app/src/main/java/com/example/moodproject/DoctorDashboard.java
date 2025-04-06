@@ -101,7 +101,7 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
 
 
         // Welcome message
-        textViewDoctorName.setText("Welcome, Dr. Smith");
+        textViewDoctorName.setText("Welcome Doctor");
 
         // Refresh patient list
         buttonRefresh.setOnClickListener(v -> {
