@@ -98,8 +98,6 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         // Setup video background
         setupVideoBackground();
 
-
-
         // Welcome message
         textViewDoctorName.setText("Welcome Doctor");
 
