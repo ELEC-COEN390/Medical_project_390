@@ -190,7 +190,8 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                 } else {
                     isRecording = false;
                     statusText.setText("Recording stopped");
-                }
+                    Intent intent = new Intent(Dashboard.this, MoodResult.class);
+                    startActivity(intent);                }
             }
         });
     }
