@@ -4,19 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="#213857"
     tools:context=".historyActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/background_dark">
+        android:background="#213857">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/background_dark"
+            android:background="#213857"
             app:title="Emotion Tracker"
             app:titleTextColor="@color/white" />
 
@@ -151,7 +151,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Neutral"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -196,7 +196,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Calm"
-                        android:textColor="@color/teal"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -241,7 +241,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Happy"
-                        android:textColor="@color/yellow"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -286,7 +286,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Sad"
-                        android:textColor="@color/blue"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -331,7 +331,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Angry"
-                        android:textColor="@color/red"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -376,7 +376,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Fearful"
-                        android:textColor="@color/purple"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -421,7 +421,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Disgust"
-                        android:textColor="@color/green"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -466,7 +466,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Surprised"
-                        android:textColor="@color/orange"
+                        android:textColor="@color/white"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -545,14 +545,6 @@
             </LinearLayout>
 
             <!-- Add Emotion button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_add_emotion"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Record New Emotion"
-                android:textAllCaps="false"
-                app:cornerRadius="8dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

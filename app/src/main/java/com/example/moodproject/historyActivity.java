@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,6 +14,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.slider.Slider;
@@ -54,7 +58,9 @@ public class historyActivity extends AppCompatActivity {
 
         // Initialize UI components
         tvCurrentDate = findViewById(R.id.tv_current_date);
-        MaterialButton btnAddEmotion = findViewById(R.id.btn_add_emotion);
+
+        // Enable full screen mode
+        makeFullScreen();
 
         // Initialize date handling
         currentDate = Calendar.getInstance();
@@ -73,9 +79,6 @@ public class historyActivity extends AppCompatActivity {
             updateDateDisplay();
             refreshEmotionData();
         });
-
-        // Set up add emotion button
-        btnAddEmotion.setOnClickListener(v -> showAddEmotionDialog());
 
         // Initialize emotion data
         initializeEmotionData();
@@ -189,8 +192,7 @@ public class historyActivity extends AppCompatActivity {
                 // Make the block clickable to edit
                 final int finalHour = hour;
                 final String finalEmotion = emotion;
-                hourBlock.setOnClickListener(v ->
-                        showEditEmotionDialog(finalEmotion, finalHour, intensities[finalHour]));
+
             }
         }
     }
@@ -248,168 +250,7 @@ public class historyActivity extends AppCompatActivity {
         return hourBlock;
     }
 
-    /**
-     * Show dialog to add a new emotion
-     */
-    private void showAddEmotionDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Record New Emotion");
 
-        // Inflate custom layout
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_emotion, null);
-        builder.setView(view);
-
-        // Get references to views
-        Slider timeSlider = view.findViewById(R.id.time_slider);
-        TextView timeValueText = view.findViewById(R.id.time_value);
-
-        // Set up time slider
-        timeSlider.setValue(Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
-        updateTimeText(timeValueText, (int) timeSlider.getValue());
-
-        timeSlider.addOnChangeListener((slider, value, fromUser) ->
-                updateTimeText(timeValueText, (int) value));
-
-        // Set dialog buttons
-        builder.setPositiveButton("Next", (dialog, which) -> {
-            int hour = (int) timeSlider.getValue();
-            showEmotionSelectionDialog(hour);
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-
-        builder.show();
-    }
-
-    /**
-     * Show dialog to select which emotion to record
-     */
-    private void showEmotionSelectionDialog(int hour) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Select Emotion");
-
-        // Format emotion names for display
-        String[] displayEmotions = new String[emotions.length];
-        for (int i = 0; i < emotions.length; i++) {
-            displayEmotions[i] = emotions[i].substring(0, 1).toUpperCase() +
-                    emotions[i].substring(1);
-        }
-
-        builder.setItems(displayEmotions, (dialog, which) -> {
-            String selectedEmotion = emotions[which];
-            showIntensitySelectionDialog(selectedEmotion, hour);
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-
-        builder.show();
-    }
-
-    /**
-     * Show dialog to select emotion intensity
-     */
-    private void showIntensitySelectionDialog(String emotion, int hour) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Select Intensity");
-
-        // Find the color for this emotion
-        int colorIndex = 0;
-        for (int i = 0; i < emotions.length; i++) {
-            if (emotions[i].equals(emotion)) {
-                colorIndex = i;
-                break;
-            }
-        }
-
-        // Inflate custom layout
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_intensity, null);
-        builder.setView(view);
-
-        // Set up intensity slider
-        Slider intensitySlider = view.findViewById(R.id.intensity_slider);
-        TextView intensityLabel = view.findViewById(R.id.intensity_label);
-        View intensityPreview = view.findViewById(R.id.intensity_preview);
-
-        // Initially set to current value if there is one
-        intensitySlider.setValue(emotionData.get(emotion)[hour]);
-        updateIntensityUI(intensityLabel, intensityPreview, (int) intensitySlider.getValue(),
-                ContextCompat.getColor(this, emotionColors[colorIndex]));
-
-        int finalColorIndex = colorIndex;
-        intensitySlider.addOnChangeListener((slider, value, fromUser) -> {
-            updateIntensityUI(intensityLabel, intensityPreview, (int) value,
-                    ContextCompat.getColor(this, emotionColors[finalColorIndex]));
-        });
-
-        // Set dialog buttons
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            int intensity = (int) intensitySlider.getValue();
-            emotionData.get(emotion)[hour] = intensity;
-            refreshEmotionData();
-
-            String formattedTime = String.format(Locale.getDefault(), "%d:00 %s",
-                    hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour),
-                    hour >= 12 ? "PM" : "AM");
-
-            String intensityText = getIntensityText(intensity);
-            String emotionDisplay = emotion.substring(0, 1).toUpperCase() + emotion.substring(1);
-
-            if (intensity > 0) {
-                Toast.makeText(this,
-                        intensityText + " " + emotionDisplay + " recorded at " + formattedTime,
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this,
-                        emotionDisplay + " cleared at " + formattedTime,
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-
-        builder.show();
-    }
-
-    /**
-     * Show dialog to edit an existing emotion entry
-     */
-    private void showEditEmotionDialog(String emotion, int hour, int currentIntensity) {
-        String emotionDisplay = emotion.substring(0, 1).toUpperCase() + emotion.substring(1);
-        String formattedTime = String.format(Locale.getDefault(), "%d:00 %s",
-                hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour),
-                hour >= 12 ? "PM" : "AM");
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(emotionDisplay + " at " + formattedTime);
-
-        String[] options;
-        if (currentIntensity > 0) {
-            options = new String[]{"Edit intensity", "Clear"};
-        } else {
-            options = new String[]{"Add " + emotionDisplay.toLowerCase()};
-        }
-
-        builder.setItems(options, (dialog, which) -> {
-            if (currentIntensity > 0 && which == 0) {
-                // Edit intensity
-                showIntensitySelectionDialog(emotion, hour);
-            } else if (currentIntensity > 0 && which == 1) {
-                // Clear
-                emotionData.get(emotion)[hour] = 0;
-                refreshEmotionData();
-                Toast.makeText(this,
-                        emotionDisplay + " cleared at " + formattedTime,
-                        Toast.LENGTH_SHORT).show();
-            } else if (currentIntensity == 0) {
-                // Add emotion
-                showIntensitySelectionDialog(emotion, hour);
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-
-        builder.show();
-    }
 
     /**
      * Update the time text based on slider value
@@ -461,9 +302,6 @@ public class historyActivity extends AppCompatActivity {
         previewView.setBackground(drawable);
     }
 
-    /**
-     * Get text representation of intensity value
-     */
     private String getIntensityText(int intensity) {
         switch (intensity) {
             case 0:
@@ -477,5 +315,23 @@ public class historyActivity extends AppCompatActivity {
             default:
                 return "Unknown";
         }
+    }
+
+    private void makeFullScreen() {
+        // Make the activity full screen
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        // Hide the status bar and navigation bar
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(),
+                getWindow().getDecorView());
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        controller.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+
+        // Add these flags for older Android versions
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
     }
 }

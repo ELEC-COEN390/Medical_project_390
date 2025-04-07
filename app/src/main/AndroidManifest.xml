@@ -73,5 +73,9 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".historyActivity"
+            android:exported="false" />
+
     </application>
 </manifest>

@@ -2,7 +2,6 @@ package com.example.moodproject;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -12,12 +11,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.android.gms.tasks.Tasks;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class FirebaseHelper {
 
@@ -35,12 +31,19 @@ public class FirebaseHelper {
     public interface PreferencesCallback {
         void onPreferencesLoaded(UserPreferences preferences);
         void onError(String errorMessage);
+
     }
 
     public interface TypeCallback{
         void onTypesLoaded(UserType Type);
         void onError(String errorMessage);
     }
+
+    public interface NameCallback{
+        void onNameLoaded(String name);
+        void onError(String errorMessage);
+    }
+
 
     public interface DoctorAssignmentCallback {
         void onAssignmentComplete(boolean success);
@@ -149,6 +152,42 @@ public class FirebaseHelper {
 
         // Save as UserType object instead of just the string
         return mDatabase.child("user_type").child(userId).setValue(type);
+    }
+
+    public Task<Void> saveUserName(String name){
+        return mDatabase.child("users").child(getCurrentUserId()).child("name").setValue(name);
+    }
+
+    public void getUserName(NameCallback callback) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            callback.onError("User not authenticated");
+            return;
+        }
+
+        mDatabase.child("users").child(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            // Check if the value is a string
+                            if (snapshot.getValue() instanceof String) {
+                                String nameStr = snapshot.getValue(String.class);
+                                callback.onNameLoaded(nameStr);
+                            } else {
+                                callback.onNameLoaded("");
+                            }
+                        } else {
+                            callback.onNameLoaded("");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
     }
 
     public Task<Void> saveUserPreferences(UserPreferences preferences) {
