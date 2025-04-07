@@ -17,6 +17,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
@@ -41,6 +42,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,9 +50,28 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.ShortBuffer;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.bumptech.glide.Glide;
+
+import org.tensorflow.lite.support.model.Model;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import org.vosk.android.StorageService;
+import org.tensorflow.lite.DataType;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.jlibrosa.audio.JLibrosa;
+import com.jlibrosa.audio.process.AudioFeatureExtraction;
 
 public class Dashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -69,16 +90,13 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
     // 10 seconds of audio at 44.1kHz, 16-bit, mono
     private static final int RECORDING_DURATION_MS = 10000;
-    private static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
+    static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
     private static final int TOTAL_BYTES = (SAMPLE_RATE * RECORDING_DURATION_MS / 1000) * BYTES_PER_SAMPLE;
 
     private Button connectButton;
-    private ImageButton StartButton;
+
     private ImageView loading;
     private TextView statusText;
-//    private ProgressBar progressBar;
-//    private TextView spokenText;
-//    private TextView micLabel;
 
     private Socket socket;
     private byte[] audioData;
@@ -95,7 +113,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private FirebaseAuth mAuth;
 
     // Speech recognition components
-//    private VoskSpeechRecognizer voskRecognizer;
+    private VoskSpeechRecognizer voskRecognizer;
     private File lastRecordedFile;
 
     private static final int PERMISSION_REQUEST_CODE = 200;
@@ -108,7 +126,6 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             Manifest.permission.RECORD_AUDIO // Add record audio permission for speech recognition
     };
 
-    @SuppressLint("WrongViewCast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,29 +134,24 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
         // Initialize UI components
 
+        mAuth = FirebaseAuth.getInstance();
+
         connectButton = findViewById(R.id.connectButton);
         statusText = findViewById(R.id.statusText);
-        StartButton = findViewById(R.id.startButton);
         loading = findViewById(R.id.imageView2);
         loading.setImageResource(R.drawable.loading);
 
-//        progressBar = findViewById(R.id.progressBar);
-//        spokenText = findViewById(R.id.textView3);
 
-        // May be null if not in your layout
-//        try {
-//            micLabel = findViewById(R.id.micLabel);
-//        } catch (Exception e) {
-//            Log.e(TAG, "micLabel not found in layout");
-//        }
-
-        // Disable buttons initially
-        StartButton.setEnabled(false);
 
         videoBackground = findViewById(R.id.videoBackground);
 
         // Set up the video background
         setupVideoBackground();
+
+
+        // In your onCreate or wherever you want to load the GIF
+        ImageView loading = findViewById(R.id.imageView2);
+        Glide.with(this).asGif().load(R.drawable.loading).into(loading);
 
         // Set up the navigation drawer
         setupNavigationDrawer();
@@ -171,7 +183,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             requestPermissions();
             // The initialization will happen in onRequestPermissionsResult
         }
-// Remove this line: initSpeechRecognizer();
+        initSpeechRecognizer();
 
 
         // Set button click listeners
@@ -182,33 +194,17 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             }
         });
 
-        StartButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!isRecording) {
-                    new RecordTask().execute();
-                } else {
-                    isRecording = false;
-                    statusText.setText("Recording stopped");
-                    Intent intent = new Intent(Dashboard.this, MoodResult.class);
-                    startActivity(intent);                }
-            }
-        });
     }
 
     // Initialize the Vosk-based speech recognizer
-//    private void initSpeechRecognizer() {
-//        voskRecognizer = new VoskSpeechRecognizer(this);
-//        Log.d(TAG, "Speech recognizer initialized");
-//    }
+    private void initSpeechRecognizer() {
+        voskRecognizer = new VoskSpeechRecognizer(this);
+        Log.d(TAG, "Speech recognizer initialized");
+    }
 
-    // This method will be called by the VoskSpeechRecognizer to update the UI with recognized text
-//    public void updateRecognizedText(String text) {
-//        // Update the UI with recognized text
-//        if (spokenText != null) {
-//            spokenText.setText(text);
-//        }
-//    }
+    public void updateRecognizedText(String text) {
+        // Update the recognized text
+    }
 
     // Setup the navigation drawer
     private void setupNavigationDrawer() {
@@ -365,15 +361,13 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         protected void onPostExecute(Boolean success) {
             loading.setVisibility(View.GONE);
             connectButton.setEnabled(true);
-            StartButton.setEnabled(success);
+
 
             if (success) {
                 statusText.setText("Connected to ESP32");
-                StartButton.setEnabled(true);
                 Toast.makeText(Dashboard.this, "Connected to ESP32", Toast.LENGTH_SHORT).show();
             } else {
                 statusText.setText("Connection failed");
-                StartButton.setEnabled(false);
                 Toast.makeText(Dashboard.this, "Connection failed", Toast.LENGTH_SHORT).show();
             }
         }
@@ -386,16 +380,11 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPreExecute() {
             isRecording = true;
-            //StartButton.setText("Stop");
             statusText.setText("Recording...");
             loading.setVisibility(View.VISIBLE);//gif
-//           start.setProgress(0);
             startTime = System.currentTimeMillis();
 
-            // Update mic label if it exists
-//            if (micLabel != null) {
-//                micLabel.setText("Recording... 🔴");
-//            }
+
         }
 
         @Override
@@ -457,12 +446,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         }
 
 
-
         @Override
         protected void onProgressUpdate(Integer... values) {
             int progress = values[0];
             if (progress >= 0) {
-//                progressBar.setProgress(progress);
                 statusText.setText("Recording... " + progress + "%");
             } else if (progress == -1) {
                 statusText.setText("Error: Not connected");
@@ -471,21 +458,73 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             }
         }
 
+        // In your RecordTask's onPostExecute method
         @Override
         protected void onPostExecute(Boolean success) {
             isRecording = false;
-//            StartButton.setText("Record");
-           loading.setVisibility(View.GONE);
-
-            // Reset mic label if it exists
-//            if (micLabel != null) {
-//                micLabel.setText("Tap to Speak 🗣️");
-//            }
+            loading.setVisibility(View.GONE);
 
             if (success) {
                 statusText.setText("Recording complete");
-                // Process speech to text
-//                setSpeachToText();
+
+                // Create MFCCExtractor with context
+                MFCCExtractor mfccExtractor = new MFCCExtractor(Dashboard.this);
+
+                new Thread(() -> {
+                    try {
+                        // The number of samples in 1 second of audio
+                        int samplesPerSecond = SAMPLE_RATE;
+                        int bytesPerSecond = samplesPerSecond * BYTES_PER_SAMPLE;
+
+                        // List to store emotion results for each second
+                        List<Map<String, Float>> emotionResults = new ArrayList<>();
+
+                        // Load the TensorFlow Lite model
+                        org.tensorflow.lite.Interpreter interpreter =
+                                new org.tensorflow.lite.Interpreter(loadModelFile());
+
+                        // Process each 1-second chunk
+                        for (int i = 0; i < 10; i++) {
+                            // Extract 1 second of audio data
+                            byte[] secondData = new byte[bytesPerSecond];
+                            System.arraycopy(audioData, i * bytesPerSecond, secondData, 0, bytesPerSecond);
+
+                            // Convert audio chunk to MFCC features
+                            float[][][] mfccFeatures = mfccExtractor.extractMFCCFeatures(secondData);
+
+                            // Prepare output buffer for model result
+                            float[][] outputBuffer = new float[1][8]; // Assuming 8 emotion classes
+
+                            // Run model inference
+                            interpreter.run(mfccFeatures, outputBuffer);
+
+                            // Process the results for this second
+                            Map<String, Float> secondEmotions = mfccExtractor.processModelOutputForSecond(outputBuffer[0], i);
+                            emotionResults.add(secondEmotions);
+                        }
+
+                        // Release model resources
+                        interpreter.close();
+
+                        // Aggregate results across all seconds
+                        Map<String, Float> aggregatedEmotions = mfccExtractor.aggregateEmotionResults(emotionResults);
+
+                        // Launch results activity
+                        runOnUiThread(() -> {
+                            launchResultsActivity(emotionResults, aggregatedEmotions);
+                        });
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing audio with TensorFlow: " + e.getMessage());
+                        e.printStackTrace();
+
+                        runOnUiThread(() -> {
+                            Toast.makeText(Dashboard.this,
+                                    "Error analyzing emotions: " + e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }).start();
             } else {
                 statusText.setText("Recording failed");
             }
@@ -500,7 +539,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             loading.setVisibility(View.VISIBLE);
 //            progressBar.setProgress(0);
             connectButton.setEnabled(false);
-            StartButton.setEnabled(false);
+
         }
 
         @Override
@@ -548,7 +587,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             statusText.setText("Playback complete");
             loading.setVisibility(View.GONE);
             connectButton.setEnabled(true);
-            StartButton.setEnabled(true);
+
         }
     }
 
@@ -579,48 +618,45 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     }
 
     // Process the audio file for speech recognition
-//    private void processSpeechRecognition(File audioFile) {
-//        if (voskRecognizer != null) {
-//            // Show loading indicator
-//            progressBar.setVisibility(View.VISIBLE);
-//            statusText.setText("Processing speech...");
-//
-//            // Process the file in a background thread
-//            new Thread(() -> {
-//                voskRecognizer.processAudioFile(audioFile);
-//
-//                // Hide loading indicator on the UI thread
-//                runOnUiThread(() -> {
-//                    progressBar.setVisibility(View.GONE);
-//                    statusText.setText("Speech processing complete");
-//                });
-//            }).start();
-//        } else {
-//            Log.e(TAG, "Speech recognizer is not initialized");
-//            Toast.makeText(this, "Speech recognition not available", Toast.LENGTH_SHORT).show();
-//        }
-//    }
+    private void processSpeechRecognition(File audioFile) {
+        if (voskRecognizer != null) {
+            // Show loading indicator
+            statusText.setText("Processing speech...");
+
+            // Process the file in a background thread
+            new Thread(() -> {
+                voskRecognizer.processAudioFile(audioFile);
+
+                // Hide loading indicator on the UI thread
+                runOnUiThread(() -> {
+                    statusText.setText("Speech processing complete");
+                });
+            }).start();
+        } else {
+            Log.e(TAG, "Speech recognizer is not initialized");
+            Toast.makeText(this, "Speech recognition not available", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     // Process audio data directly (alternative to file-based approach)
-//    private void processAudioDataForSpeechRecognition() {
-//        if (voskRecognizer != null && audioData != null) {
-//            voskRecognizer.processAudioData(audioData);
-//        }
-//    }
+    private void processAudioDataForSpeechRecognition() {
+        if (voskRecognizer != null && audioData != null) {
+            voskRecognizer.processAudioData(audioData);
+        }
+    }
 
     // Updated speech to text method
-//    private void setSpeachToText() {
-//        // If we have a recorded file, process it
-//        if (lastRecordedFile != null && lastRecordedFile.exists()) {
-//            processSpeechRecognition(lastRecordedFile);
-//        } else if (audioData != null) {
-//            // Fallback to processing the audio data directly
-//            processAudioDataForSpeechRecognition();
-//        } else {
-//            Log.e(TAG, "No recorded audio data found to process");
-//            spokenText.setText("No audio recorded to transcribe");
-//        }
-//    }
+    private void setSpeachToText() {
+        // If we have a recorded file, process it
+        if (lastRecordedFile != null && lastRecordedFile.exists()) {
+            processSpeechRecognition(lastRecordedFile);
+        } else if (audioData != null) {
+            // Fallback to processing the audio data directly
+            processAudioDataForSpeechRecognition();
+        } else {
+            Log.e(TAG, "No recorded audio data found to process");
+        }
+    }
 
     // Simple helper for converting byte array of PCM data to 16-bit shorts
     // (Useful for processing audio data if needed)
@@ -728,10 +764,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             audioTrack.release();
             audioTrack = null;
         }
-//        if (voskRecognizer != null) {
-//            voskRecognizer.destroy();
-//            voskRecognizer = null;
-//        }
+        if (voskRecognizer != null) {
+            voskRecognizer.destroy();
+            voskRecognizer = null;
+        }
         closeConnection();
     }
 
@@ -752,7 +788,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             if (deniedCount == 0) {
                 // All permissions granted
                 Log.d(TAG, "All permissions granted, initializing components");
-//                initSpeechRecognizer();
+                initSpeechRecognizer();
             } else {
                 // Some permissions were denied
                 Log.e(TAG, deniedCount + " permissions were denied");
@@ -773,7 +809,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                             Toast.LENGTH_LONG).show();
 
                     // Try to initialize with limited functionality
-//                    initSpeechRecognizer();
+                    initSpeechRecognizer();
                 });
 
                 builder.show();
@@ -810,6 +846,136 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         }
     }
 
+    /**
+     * Process the model output for a single second of audio
+     * @param output TensorBuffer containing model output
+     * @param secondIndex The index of the current second (0-9)
+     * @return Map of emotion names to confidence values
+     */
+    private Map<String, Float> processModelOutputForSecond(float[] output, int secondIndex) {
+        // Map to store emotion confidence values
+        Map<String, Float> emotions = new HashMap<>();
+
+        // Map the outputs to emotions (adjust based on your model's output)
+        String[] emotionLabels = {"neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"};
+
+        // Store emotion confidences
+        for (int i = 0; i < output.length && i < emotionLabels.length; i++) {
+            emotions.put(emotionLabels[i], output[i]);
+        }
+
+        // Log the detected emotion for this second
+        String maxEmotion = getMaxEmotion(emotions);
+        Log.d(TAG, "Second " + secondIndex + ": " + maxEmotion + " (" + emotions.get(maxEmotion) + ")");
+
+        return emotions;
+    }
+
+    private MappedByteBuffer loadModelFile() throws IOException {
+        AssetFileDescriptor fileDescriptor = getAssets().openFd("your_model.tflite");
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+    }
+
+
+    /**
+     * Get the emotion with the highest confidence value
+     * @param emotions Map of emotions to confidence values
+     * @return The emotion with the highest confidence
+     */
+    private String getMaxEmotion(Map<String, Float> emotions) {
+        String maxEmotion = "";
+        float maxValue = 0;
+
+        for (Map.Entry<String, Float> entry : emotions.entrySet()) {
+            if (entry.getValue() > maxValue) {
+                maxValue = entry.getValue();
+                maxEmotion = entry.getKey();
+            }
+        }
+
+        return maxEmotion;
+    }
+
+    /**
+     * Aggregate emotion results across all seconds
+     * @param secondResults List of emotion maps for each second
+     * @return Map of aggregated emotion confidences
+     */
+    private Map<String, Float> aggregateEmotionResults(List<Map<String, Float>> secondResults) {
+        // Map to store aggregated emotions
+        Map<String, Float> aggregated = new HashMap<>();
+
+        // Get all emotion labels (from the first second, assuming consistent across all)
+        Set<String> emotionLabels = secondResults.get(0).keySet();
+
+        // Initialize aggregated values
+        for (String emotion : emotionLabels) {
+            aggregated.put(emotion, 0.0f);
+        }
+
+        // Sum up all confidence values across seconds
+        for (Map<String, Float> secondResult : secondResults) {
+            for (String emotion : emotionLabels) {
+                aggregated.put(emotion,
+                        aggregated.get(emotion) + secondResult.getOrDefault(emotion, 0.0f));
+            }
+        }
+
+        // Normalize by dividing by the number of seconds
+        for (String emotion : emotionLabels) {
+            aggregated.put(emotion, aggregated.get(emotion) / secondResults.size());
+        }
+
+        return aggregated;
+    }
+
+    /**
+     * Launch the results activity with emotion data
+     * @param secondResults List of emotion maps for each second
+     * @param aggregatedResults Map of aggregated emotion confidences
+     */
+    private void launchResultsActivity(List<Map<String, Float>> secondResults,
+                                       Map<String, Float> aggregatedResults) {
+        // Get the most prominent emotion overall
+        String dominantEmotion = getMaxEmotion(aggregatedResults);
+        float confidence = aggregatedResults.get(dominantEmotion) * 100; // Convert to percentage
+
+        // Launch on UI thread
+        runOnUiThread(() -> {
+            Intent intent = new Intent(Dashboard.this, MoodResult.class);
+
+            // Add the overall detected emotion
+            intent.putExtra("DETECTED_EMOTION", dominantEmotion);
+            intent.putExtra("CONFIDENCE", confidence);
+
+            // Add all emotions with their confidence values
+            for (Map.Entry<String, Float> entry : aggregatedResults.entrySet()) {
+                intent.putExtra("EMOTION_" + entry.getKey().toUpperCase(), entry.getValue() * 100);
+            }
+
+            // Add data for each second (useful for detailed analysis or visualization)
+            for (int i = 0; i < secondResults.size(); i++) {
+                Map<String, Float> secondData = secondResults.get(i);
+
+                // Get the dominant emotion for this second
+                String secondEmotion = getMaxEmotion(secondData);
+                intent.putExtra("SECOND_" + i + "_EMOTION", secondEmotion);
+                intent.putExtra("SECOND_" + i + "_CONFIDENCE", secondData.get(secondEmotion) * 100);
+
+                // Add all emotions for this second
+                for (Map.Entry<String, Float> entry : secondData.entrySet()) {
+                    intent.putExtra("SECOND_" + i + "_" + entry.getKey().toUpperCase(),
+                            entry.getValue() * 100);
+                }
+            }
+
+            startActivity(intent);
+        });
+    }
 
 
 }

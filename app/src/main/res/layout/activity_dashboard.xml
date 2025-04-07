@@ -9,22 +9,24 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-    <!-- Main content -->
-<!--    <Button-->
-<!--        android:id="@+id/connectButton2"-->
-<!--        android:layout_width="122dp"-->
-<!--        android:layout_height="56dp"-->
-<!--        android:backgroundTint="@color/navy"-->
-<!--        android:fontFamily="sans-serif-medium"-->
-<!--        android:insetLeft="0dp"-->
-<!--        android:insetTop="0dp"-->
-<!--        android:insetRight="0dp"-->
-<!--        android:insetBottom="0dp"-->
-<!--        android:text="Connect "-->
-<!--        android:textSize="18sp"-->
-<!--        app:cornerRadius="25dp"-->
-<!--        tools:layout_editor_absoluteX="16dp"-->
-<!--        tools:layout_editor_absoluteY="16dp" />-->
+<!--
+    &lt;!&ndash; Main content &ndash;&gt;
+    <Button
+        android:id="@+id/connectButton2"
+        android:layout_width="122dp"
+        android:layout_height="56dp"
+        android:backgroundTint="@color/navy"
+        android:fontFamily="sans-serif-medium"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        android:text="Connect "
+        android:textSize="18sp"
+        app:cornerRadius="25dp"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="16dp" />
+-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -51,7 +53,6 @@
             android:id="@+id/overlay"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="#90FFFFFF"
             android:alpha="0.85"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -63,14 +64,13 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/navy"
             android:elevation="4dp"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:title="ESP32 Audio Client" />
+            app:title=" " />
 
         <!-- Content container with padding -->
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -93,6 +93,7 @@
                 android:layout_marginTop="32dp"
                 android:text="Analyzing"
                 android:textSize="16sp"
+                android:textColor="@color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.501"
                 app:layout_constraintStart_toStartOf="parent"
@@ -153,36 +154,13 @@
 
             <!-- Spoken Text Card With Emoji -->
 
-            <androidx.cardview.widget.CardView
-                android:id="@id/infoText"
-                android:layout_width="259dp"
-                android:layout_height="43dp"
-                app:cardCornerRadius="25dp"
-                app:layout_constraintBottom_toTopOf="@id/imageView2"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.504"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.666">
-
-                <TextView
-                    android:layout_width="261dp"
-                    android:layout_height="39dp"
-                    android:text="Tell Me About Your Day"
-
-                    android:textAlignment="center"
-                    android:textSize="20dp">
-
-                </TextView>
-
-            </androidx.cardview.widget.CardView>
 
             <Button
                 android:id="@+id/connectButton"
                 android:layout_width="122dp"
                 android:layout_height="56dp"
                 android:layout_marginEnd="109dp"
-                android:backgroundTint="@color/navy"
+                android:backgroundTint="#213857"
                 android:fontFamily="sans-serif-medium"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
@@ -202,7 +180,7 @@
                 android:id="@+id/startButton"
                 android:layout_width="122dp"
                 android:layout_height="56dp"
-                android:backgroundTint="@color/navy"
+                android:backgroundTint="#213857"
                 android:fontFamily="sans-serif-medium"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
@@ -236,6 +214,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="64dp"
                 android:text="Listening"
+                android:textColor="@color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.501"
                 app:layout_constraintStart_toStartOf="parent"
@@ -244,14 +223,14 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-<!--    &lt;!&ndash; Navigation Drawer &ndash;&gt;-->
-<!--    <com.google.android.material.navigation.NavigationView-->
-<!--        android:id="@+id/nav_view"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_gravity="start"-->
-<!--        android:fitsSystemWindows="true"-->
-<!--        app:headerLayout="@layout/nav_header"-->
-<!--        app:menu="@menu/drawer_menu" />-->
+    <!-- Navigation Drawer -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

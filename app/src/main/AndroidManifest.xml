@@ -77,5 +77,10 @@
             android:name=".historyActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".MoodResult"
+            android:exported="false" />
+
+
     </application>
 </manifest>
