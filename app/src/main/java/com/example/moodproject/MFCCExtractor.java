@@ -194,8 +194,7 @@ public class MFCCExtractor {
 
         // Emotion labels (should match your model's output order)
         String[] emotionLabels = {
-                "neutral", "calm", "happy", "sad",
-                "angry", "fearful", "disgust", "surprised"
+                "angry", "calm", "disgust", "fearful", "happy", "neutral", "sad", "surprised"
         };
 
         // Store emotion confidences
