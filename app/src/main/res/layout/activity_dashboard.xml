@@ -10,21 +10,21 @@
     tools:openDrawer="start">
 
     <!-- Main content -->
-    <Button
-        android:id="@+id/connectButton2"
-        android:layout_width="122dp"
-        android:layout_height="56dp"
-        android:backgroundTint="@color/navy"
-        android:fontFamily="sans-serif-medium"
-        android:insetLeft="0dp"
-        android:insetTop="0dp"
-        android:insetRight="0dp"
-        android:insetBottom="0dp"
-        android:text="Connect "
-        android:textSize="18sp"
-        app:cornerRadius="25dp"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="16dp" />
+<!--    <Button-->
+<!--        android:id="@+id/connectButton2"-->
+<!--        android:layout_width="122dp"-->
+<!--        android:layout_height="56dp"-->
+<!--        android:backgroundTint="@color/navy"-->
+<!--        android:fontFamily="sans-serif-medium"-->
+<!--        android:insetLeft="0dp"-->
+<!--        android:insetTop="0dp"-->
+<!--        android:insetRight="0dp"-->
+<!--        android:insetBottom="0dp"-->
+<!--        android:text="Connect "-->
+<!--        android:textSize="18sp"-->
+<!--        app:cornerRadius="25dp"-->
+<!--        tools:layout_editor_absoluteX="16dp"-->
+<!--        tools:layout_editor_absoluteY="16dp" />-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

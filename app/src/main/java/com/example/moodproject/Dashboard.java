@@ -70,12 +70,11 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
     private static final int TOTAL_BYTES = (SAMPLE_RATE * RECORDING_DURATION_MS / 1000) * BYTES_PER_SAMPLE;
 
+    private Button StartButton;
     private Button connectButton;
-    private ImageButton recordButton;
     private TextView statusText;
-    private ProgressBar progressBar;
-    private TextView spokenText;
-    private TextView micLabel;
+
+
 
     private Socket socket;
     private byte[] audioData;
@@ -92,7 +91,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private FirebaseAuth mAuth;
 
     // Speech recognition components
-    private VoskSpeechRecognizer voskRecognizer;
+//    private VoskSpeechRecognizer voskRecognizer;
     private File lastRecordedFile;
 
     private static final int PERMISSION_REQUEST_CODE = 200;
@@ -113,20 +112,12 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
         // Initialize UI components
         connectButton = findViewById(R.id.connectButton);
-        recordButton = findViewById(R.id.ImageButton);
+        StartButton = findViewById(R.id.startButton);
         statusText = findViewById(R.id.statusText);
-        progressBar = findViewById(R.id.progressBar);
-        spokenText = findViewById(R.id.textView3);
 
-        // May be null if not in your layout
-        try {
-            micLabel = findViewById(R.id.micLabel);
-        } catch (Exception e) {
-            Log.e(TAG, "micLabel not found in layout");
-        }
 
         // Disable buttons initially
-        recordButton.setEnabled(false);
+        StartButton.setEnabled(false);
 
         videoBackground = findViewById(R.id.videoBackground);
 
@@ -157,7 +148,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 // Remove the duplicate initialization
         if (checkPermissions()) {
             Log.d(TAG, "Permissions already granted, initializing speech recognizer");
-            initSpeechRecognizer();
+//            initSpeechRecognizer();
         } else {
             Log.d(TAG, "Requesting permissions");
             requestPermissions();
@@ -174,7 +165,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             }
         });
 
-        recordButton.setOnClickListener(new View.OnClickListener() {
+        StartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!isRecording) {
@@ -182,24 +173,25 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                 } else {
                     isRecording = false;
                     statusText.setText("Recording stopped");
+                    startActivity(new Intent(Dashboard.this, MoodResult.class));
                 }
             }
         });
     }
 
     // Initialize the Vosk-based speech recognizer
-    private void initSpeechRecognizer() {
-        voskRecognizer = new VoskSpeechRecognizer(this);
-        Log.d(TAG, "Speech recognizer initialized");
-    }
+//    private void initSpeechRecognizer() {
+//        voskRecognizer = new VoskSpeechRecognizer(this);
+//        Log.d(TAG, "Speech recognizer initialized");
+//    }
 
     // This method will be called by the VoskSpeechRecognizer to update the UI with recognized text
-    public void updateRecognizedText(String text) {
-        // Update the UI with recognized text
-        if (spokenText != null) {
-            spokenText.setText(text);
-        }
-    }
+//    public void updateRecognizedText(String text) {
+//        // Update the UI with recognized text
+//        if (spokenText != null) {
+//            spokenText.setText(text);
+//        }
+//    }
 
     // Setup the navigation drawer
     private void setupNavigationDrawer() {
@@ -327,7 +319,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPreExecute() {
             statusText.setText("Connecting to ESP32...");
-            progressBar.setVisibility(View.VISIBLE);
+//            progressBar.setVisibility(View.VISIBLE);
             connectButton.setEnabled(false);
         }
 
@@ -354,17 +346,17 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
         @Override
         protected void onPostExecute(Boolean success) {
-            progressBar.setVisibility(View.GONE);
+//            progressBar.setVisibility(View.GONE);
             connectButton.setEnabled(true);
-            recordButton.setEnabled(success);
+            StartButton.setEnabled(success);
 
             if (success) {
                 statusText.setText("Connected to ESP32");
-                recordButton.setEnabled(true);
+                StartButton.setEnabled(true);
                 Toast.makeText(Dashboard.this, "Connected to ESP32", Toast.LENGTH_SHORT).show();
             } else {
                 statusText.setText("Connection failed");
-                recordButton.setEnabled(false);
+                StartButton.setEnabled(false);
                 Toast.makeText(Dashboard.this, "Connection failed", Toast.LENGTH_SHORT).show();
             }
         }
@@ -379,14 +371,14 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             isRecording = true;
             // recordButton.setText("Stop");
             statusText.setText("Recording...");
-            progressBar.setVisibility(View.VISIBLE);
-            progressBar.setProgress(0);
+//            progressBar.setVisibility(View.VISIBLE);
+//            progressBar.setProgress(0);
             startTime = System.currentTimeMillis();
 
             // Update mic label if it exists
-            if (micLabel != null) {
-                micLabel.setText("Recording... 🔴");
-            }
+//            if (micLabel != null) {
+//                micLabel.setText("Recording... 🔴");
+//            }
         }
 
         @Override
@@ -453,7 +445,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         protected void onProgressUpdate(Integer... values) {
             int progress = values[0];
             if (progress >= 0) {
-                progressBar.setProgress(progress);
+//                progressBar.setProgress(progress);
                 statusText.setText("Recording... " + progress + "%");
             } else if (progress == -1) {
                 statusText.setText("Error: Not connected");
@@ -466,17 +458,17 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         protected void onPostExecute(Boolean success) {
             isRecording = false;
             //recordButton.setText("Record");
-            progressBar.setVisibility(View.GONE);
+//            progressBar.setVisibility(View.GONE);
 
             // Reset mic label if it exists
-            if (micLabel != null) {
-                micLabel.setText("Tap to Speak 🗣️");
-            }
+//            if (micLabel != null) {
+//                micLabel.setText("Tap to Speak 🗣️");
+//            }
 
             if (success) {
                 statusText.setText("Recording complete");
                 // Process speech to text
-                setSpeachToText();
+//                setSpeachToText();
             } else {
                 statusText.setText("Recording failed");
             }
@@ -488,10 +480,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPreExecute() {
             statusText.setText("Playing audio...");
-            progressBar.setVisibility(View.VISIBLE);
-            progressBar.setProgress(0);
+//            progressBar.setVisibility(View.VISIBLE);
+//            progressBar.setProgress(0);
             connectButton.setEnabled(false);
-            recordButton.setEnabled(false);
+            StartButton.setEnabled(false);
         }
 
         @Override
@@ -529,18 +521,18 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             return null;
         }
 
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            progressBar.setProgress(values[0]);
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            statusText.setText("Playback complete");
-            progressBar.setVisibility(View.GONE);
-            connectButton.setEnabled(true);
-            recordButton.setEnabled(true);
-        }
+//        @Override
+//        protected void onProgressUpdate(Integer... values) {
+//            progressBar.setProgress(values[0]);
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Void aVoid) {
+//            statusText.setText("Playback complete");
+//            progressBar.setVisibility(View.GONE);
+//            connectButton.setEnabled(true);
+//            recordButton.setEnabled(true);
+//        }
     }
 
     // Save audio data to file and process for speech recognition
@@ -570,48 +562,48 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     }
 
     // Process the audio file for speech recognition
-    private void processSpeechRecognition(File audioFile) {
-        if (voskRecognizer != null) {
-            // Show loading indicator
-            progressBar.setVisibility(View.VISIBLE);
-            statusText.setText("Processing speech...");
-
-            // Process the file in a background thread
-            new Thread(() -> {
-                voskRecognizer.processAudioFile(audioFile);
-
-                // Hide loading indicator on the UI thread
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    statusText.setText("Speech processing complete");
-                });
-            }).start();
-        } else {
-            Log.e(TAG, "Speech recognizer is not initialized");
-            Toast.makeText(this, "Speech recognition not available", Toast.LENGTH_SHORT).show();
-        }
-    }
+//    private void processSpeechRecognition(File audioFile) {
+//        if (voskRecognizer != null) {
+//            // Show loading indicator
+////            progressBar.setVisibility(View.VISIBLE);
+//            statusText.setText("Processing speech...");
+//
+//            // Process the file in a background thread
+//            new Thread(() -> {
+////                voskRecognizer.processAudioFile(audioFile);
+//
+//                // Hide loading indicator on the UI thread
+//                runOnUiThread(() -> {
+////                    progressBar.setVisibility(View.GONE);
+//                    statusText.setText("Speech processing complete");
+//                });
+//            }).start();
+//        } else {
+//            Log.e(TAG, "Speech recognizer is not initialized");
+//            Toast.makeText(this, "Speech recognition not available", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
     // Process audio data directly (alternative to file-based approach)
-    private void processAudioDataForSpeechRecognition() {
-        if (voskRecognizer != null && audioData != null) {
-            voskRecognizer.processAudioData(audioData);
-        }
-    }
+//    private void processAudioDataForSpeechRecognition() {
+//        if (voskRecognizer != null && audioData != null) {
+//            voskRecognizer.processAudioData(audioData);
+//        }
+//    }
 
     // Updated speech to text method
-    private void setSpeachToText() {
-        // If we have a recorded file, process it
-        if (lastRecordedFile != null && lastRecordedFile.exists()) {
-            processSpeechRecognition(lastRecordedFile);
-        } else if (audioData != null) {
-            // Fallback to processing the audio data directly
-            processAudioDataForSpeechRecognition();
-        } else {
-            Log.e(TAG, "No recorded audio data found to process");
-            spokenText.setText("No audio recorded to transcribe");
-        }
-    }
+//    private void setSpeachToText() {
+//        // If we have a recorded file, process it
+//        if (lastRecordedFile != null && lastRecordedFile.exists()) {
+//            processSpeechRecognition(lastRecordedFile);
+//        } else if (audioData != null) {
+//            // Fallback to processing the audio data directly
+//            processAudioDataForSpeechRecognition();
+//        } else {
+//            Log.e(TAG, "No recorded audio data found to process");
+//            spokenText.setText("No audio recorded to transcribe");
+//        }
+//    }
 
     // Simple helper for converting byte array of PCM data to 16-bit shorts
     // (Useful for processing audio data if needed)
@@ -719,10 +711,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             audioTrack.release();
             audioTrack = null;
         }
-        if (voskRecognizer != null) {
-            voskRecognizer.destroy();
-            voskRecognizer = null;
-        }
+//        if (voskRecognizer != null) {
+//            voskRecognizer.destroy();
+//            voskRecognizer = null;
+//        }
         closeConnection();
     }
 
@@ -743,7 +735,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             if (deniedCount == 0) {
                 // All permissions granted
                 Log.d(TAG, "All permissions granted, initializing components");
-                initSpeechRecognizer();
+//                initSpeechRecognizer();
             } else {
                 // Some permissions were denied
                 Log.e(TAG, deniedCount + " permissions were denied");
@@ -764,7 +756,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                             Toast.LENGTH_LONG).show();
 
                     // Try to initialize with limited functionality
-                    initSpeechRecognizer();
+//                    initSpeechRecognizer();
                 });
 
                 builder.show();
