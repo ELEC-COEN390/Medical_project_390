@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
@@ -30,6 +31,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -70,11 +72,13 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
     private static final int TOTAL_BYTES = (SAMPLE_RATE * RECORDING_DURATION_MS / 1000) * BYTES_PER_SAMPLE;
 
-    private Button StartButton;
     private Button connectButton;
+    private ImageButton StartButton;
+    private ImageView loading;
     private TextView statusText;
-
-
+//    private ProgressBar progressBar;
+//    private TextView spokenText;
+//    private TextView micLabel;
 
     private Socket socket;
     private byte[] audioData;
@@ -104,6 +108,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             Manifest.permission.RECORD_AUDIO // Add record audio permission for speech recognition
     };
 
+    @SuppressLint("WrongViewCast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,10 +116,22 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         setContentView(R.layout.activity_dashboard);
 
         // Initialize UI components
-        connectButton = findViewById(R.id.connectButton);
-        StartButton = findViewById(R.id.startButton);
-        statusText = findViewById(R.id.statusText);
 
+        connectButton = findViewById(R.id.connectButton);
+        statusText = findViewById(R.id.statusText);
+        StartButton = findViewById(R.id.startButton);
+        loading = findViewById(R.id.imageView2);
+        loading.setImageResource(R.drawable.loading);
+
+//        progressBar = findViewById(R.id.progressBar);
+//        spokenText = findViewById(R.id.textView3);
+
+        // May be null if not in your layout
+//        try {
+//            micLabel = findViewById(R.id.micLabel);
+//        } catch (Exception e) {
+//            Log.e(TAG, "micLabel not found in layout");
+//        }
 
         // Disable buttons initially
         StartButton.setEnabled(false);
@@ -173,7 +190,6 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                 } else {
                     isRecording = false;
                     statusText.setText("Recording stopped");
-                    startActivity(new Intent(Dashboard.this, MoodResult.class));
                 }
             }
         });
@@ -346,7 +362,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
         @Override
         protected void onPostExecute(Boolean success) {
-//            progressBar.setVisibility(View.GONE);
+            loading.setVisibility(View.GONE);
             connectButton.setEnabled(true);
             StartButton.setEnabled(success);
 
@@ -369,10 +385,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPreExecute() {
             isRecording = true;
-            // recordButton.setText("Stop");
+            //StartButton.setText("Stop");
             statusText.setText("Recording...");
-//            progressBar.setVisibility(View.VISIBLE);
-//            progressBar.setProgress(0);
+            loading.setVisibility(View.VISIBLE);//gif
+//           start.setProgress(0);
             startTime = System.currentTimeMillis();
 
             // Update mic label if it exists
@@ -457,8 +473,8 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPostExecute(Boolean success) {
             isRecording = false;
-            //recordButton.setText("Record");
-//            progressBar.setVisibility(View.GONE);
+//            StartButton.setText("Record");
+           loading.setVisibility(View.GONE);
 
             // Reset mic label if it exists
 //            if (micLabel != null) {
@@ -480,7 +496,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPreExecute() {
             statusText.setText("Playing audio...");
-//            progressBar.setVisibility(View.VISIBLE);
+            loading.setVisibility(View.VISIBLE);
 //            progressBar.setProgress(0);
             connectButton.setEnabled(false);
             StartButton.setEnabled(false);
@@ -525,14 +541,14 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 //        protected void onProgressUpdate(Integer... values) {
 //            progressBar.setProgress(values[0]);
 //        }
-//
-//        @Override
-//        protected void onPostExecute(Void aVoid) {
-//            statusText.setText("Playback complete");
-//            progressBar.setVisibility(View.GONE);
-//            connectButton.setEnabled(true);
-//            recordButton.setEnabled(true);
-//        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            statusText.setText("Playback complete");
+            loading.setVisibility(View.GONE);
+            connectButton.setEnabled(true);
+            StartButton.setEnabled(true);
+        }
     }
 
     // Save audio data to file and process for speech recognition
@@ -565,16 +581,16 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 //    private void processSpeechRecognition(File audioFile) {
 //        if (voskRecognizer != null) {
 //            // Show loading indicator
-////            progressBar.setVisibility(View.VISIBLE);
+//            progressBar.setVisibility(View.VISIBLE);
 //            statusText.setText("Processing speech...");
 //
 //            // Process the file in a background thread
 //            new Thread(() -> {
-////                voskRecognizer.processAudioFile(audioFile);
+//                voskRecognizer.processAudioFile(audioFile);
 //
 //                // Hide loading indicator on the UI thread
 //                runOnUiThread(() -> {
-////                    progressBar.setVisibility(View.GONE);
+//                    progressBar.setVisibility(View.GONE);
 //                    statusText.setText("Speech processing complete");
 //                });
 //            }).start();
