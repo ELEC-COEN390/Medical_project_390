@@ -7,7 +7,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.view.GravityCompat;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -94,7 +96,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private static final int TOTAL_BYTES = (SAMPLE_RATE * RECORDING_DURATION_MS / 1000) * BYTES_PER_SAMPLE;
 
     private Button connectButton;
-
+    private Button StartButton;
     private ImageView loading;
     private TextView statusText;
 
@@ -131,12 +133,19 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_dashboard);
+//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.dashboard), (v, insets) -> {
+//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+//            return insets;
+//        });
+
 
         // Initialize UI components
 
         mAuth = FirebaseAuth.getInstance();
 
         connectButton = findViewById(R.id.connectButton);
+        StartButton = findViewById(R.id.startButton);
         statusText = findViewById(R.id.statusText);
         loading = findViewById(R.id.imageView2);
         loading.setImageResource(R.drawable.loading);
@@ -194,6 +203,12 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             }
         });
 
+        StartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new RecordTask().execute();
+            }
+        });
     }
 
     // Initialize the Vosk-based speech recognizer
