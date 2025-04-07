@@ -31,11 +31,10 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="#213857"
             android:elevation="4dp"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:title="Doctor Dashboard"
+            app:title=" "
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -57,7 +56,7 @@
                 android:id="@+id/textViewDoctorName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Welcome, Dr. Smith"
+                android:text="Welcome Doctor"
                 android:textSize="32sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
@@ -67,23 +66,29 @@
                 app:layout_constraintEnd_toEndOf="parent" />
 
             <!-- Refresh Button (without CardView) -->
+
+
+            <!-- Magnifying Glass Icon Button -->
+
             <Button
                 android:id="@+id/buttonRefresh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="12dp"
                 android:backgroundTint="#213857"
                 android:elevation="4dp"
                 android:fontFamily="sans-serif-medium"
                 android:text="Refresh Patient List"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="parent"
+
+                android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/textViewDoctorName" />
 
+
             <!-- RecyclerView for Patients -->
-            <androidx.recyclerview.widget.RecyclerView
+                <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewPatients"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -104,8 +109,8 @@
                 android:layout_margin="16dp"
                 android:contentDescription="Add Patient"
                 android:src="@android:drawable/ic_input_add"
-                app:backgroundTint="@color/purple_700"
-                app:tint="@android:color/white"
+                app:backgroundTint="@android:color/white"
+                app:tint="#213857"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 

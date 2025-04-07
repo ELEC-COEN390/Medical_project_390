@@ -1,6 +1,5 @@
 package com.example.moodproject;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -8,7 +7,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.PopupMenu;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.EditText;
@@ -44,7 +43,7 @@ import java.util.List;
 
 
 
-public class DoctorDashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class DoctorDashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,PatientAdapter.OnPatientClickListener {
 
     TextView textViewDoctorName;
     Button buttonRefresh;
@@ -57,7 +56,10 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
     private NavigationView navigationView;
     private Toolbar toolbar;
 
+
     VideoView videoBackground;
+
+    private FirebaseHelper db;
 
 
     @Override
@@ -71,21 +73,11 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         recyclerViewPatients = findViewById(R.id.recyclerViewPatients);
         fabAddPatient = findViewById(R.id.fabAddPatient);
 
+        db = FirebaseHelper.getInstance();
+
         recyclerViewPatients.setLayoutManager(new LinearLayoutManager(this));
-        List<Patient> dummyPatients = new ArrayList<>();
-        dummyPatients.add(new Patient("12345", "John Doe", 30));
-        dummyPatients.add(new Patient("67890", "Jane Smith", 27));
-        dummyPatients.add(new Patient("24680", "Alan Walker", 40));
 
-        PatientAdapter adapter = new PatientAdapter(dummyPatients);
-        recyclerViewPatients.setAdapter(adapter);
-
-
-
-
-
-
-
+        fetchMatchedPatients();
 
         // Initialize VideoView
         videoBackground = findViewById(R.id.videoBackground);
@@ -99,18 +91,17 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         setupVideoBackground();
 
 
-
-        // Welcome message
-        textViewDoctorName.setText("Welcome, Dr. Smith");
-
         // Refresh patient list
         buttonRefresh.setOnClickListener(v -> {
             Toast.makeText(this, "Refreshing patient list...", Toast.LENGTH_SHORT).show();
-            // TODO: Fetch unmatched patients from Firebase
+
         });
+
 
         // FAB opens popup menu
         fabAddPatient.setOnClickListener(v -> showCustomActionDialog());
+
+
 
         // Optional: Handle window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.contentContainer), (v, insets) -> {
@@ -125,6 +116,58 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         });
     }
 
+    private void fetchMatchedPatients() {
+        // Show loading message
+        Toast.makeText(this, "Fetching matched patients...", Toast.LENGTH_SHORT).show();
+
+        // Use Firebase Helper to get matched patients
+        db.getMatchedPatients(new FirebaseHelper.PatientsListCallback() {
+            @Override
+            public void onPatientsLoaded(List<DoctorAssignment> assignments) {
+                // Convert DoctorAssignment list to Patient list for the adapter
+                List<Patient> matchedPatients = new ArrayList<>();
+
+                for (DoctorAssignment assignment : assignments) {
+                    Patient patient = new Patient(
+                            assignment.getPatientId(),
+                            assignment.getPatientEmail()
+                    );
+                    matchedPatients.add(patient);
+                }
+
+                // Update the RecyclerView with matched patients
+                refreshRecycleViewMatch(matchedPatients);
+
+                // Update UI to indicate matched patients are being displayed
+                textViewDoctorName.setText("Your Patients");
+
+                // Show empty state message if no patients
+                if (matchedPatients.isEmpty()) {
+                    Toast.makeText(DoctorDashboard.this,
+                            "You don't have any assigned patients yet",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(DoctorDashboard.this,
+                        "Error loading patients: " + errorMessage,
+                        Toast.LENGTH_SHORT).show();
+
+                // Show empty list on error
+                refreshRecycleViewMatch(new ArrayList<>());
+            }
+        });
+    }
+
+
+    private void refreshRecycleViewMatch(List<Patient> dummyPatients){
+
+        PatientAdapter adapter = new PatientAdapter(dummyPatients, this);
+        recyclerViewPatients.setAdapter(adapter);
+
+    }
     private void setupNavigationDrawer() {
         // Initialize components
         toolbar = findViewById(R.id.toolbar);
@@ -154,23 +197,8 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         if (id == R.id.nav_home) {
             // Already on home screen, just close drawer
             Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-            // Launch settings activity
-            // Intent intent = new Intent(this, SettingsActivity.class);
-            // startActivity(intent);
-        } else if (id == R.id.nav_history) {
-            Toast.makeText(this, "Recording History", Toast.LENGTH_SHORT).show();
-            // Launch history activity
-            // Intent intent = new Intent(this, HistoryActivity.class);
-            // startActivity(intent);
-        } else if (id == R.id.nav_wifi_settings) {
-            Toast.makeText(this, "WiFi Settings", Toast.LENGTH_SHORT).show();
-            // Open WiFi settings
-            startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
-        } else if (id == R.id.nav_connection) {
-            Toast.makeText(this, "Connection Settings", Toast.LENGTH_SHORT).show();
-            // Show connection dialog or activity
+        } else if (id == R.id.nav_matched) {
+            fetchMatchedPatients();
         } else if (id == R.id.nav_about) {
             Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
             // Show about dialog
@@ -194,75 +222,11 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
     }
 
     private void showCustomActionDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_action, null);
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setCancelable(true)
-                .create();
-
-        Button btnAdd = dialogView.findViewById(R.id.buttonAddPatient);
-        Button btnScan = dialogView.findViewById(R.id.buttonScanQR);
-
-        btnAdd.setOnClickListener(v -> {
-            dialog.dismiss();
-            showAddPatientDialog(); // call the input dialog you already built
-        });
-
-        btnScan.setOnClickListener(v -> {
-            dialog.dismiss();
-            Toast.makeText(this, "Scan QR Code selected", Toast.LENGTH_SHORT).show();
-            String qrData = "Patient ID: 12345\nName: John Doe\nAge: 30"; // Replace with real patient data if needed
-            showQRDisplayDialog(qrData);
-        });
-
-        dialog.show();
+        // Show the custom action dialog
+            mAuth = FirebaseAuth.getInstance();
+            showQRDisplayDialog(mAuth.getCurrentUser().getUid());
     }
 
-    private void showAddPatientDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_patient, null);
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setCancelable(false)
-                .create();
-
-        EditText editName = dialogView.findViewById(R.id.editPatientName);
-        EditText editId = dialogView.findViewById(R.id.editPatientId);
-        EditText editAge = dialogView.findViewById(R.id.editPatientAge);
-        Button btnCancel = dialogView.findViewById(R.id.buttonCancel);
-        Button btnSave = dialogView.findViewById(R.id.buttonSave);
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
-
-        btnSave.setOnClickListener(v -> {
-            String name = editName.getText().toString().trim();
-            String id = editId.getText().toString().trim();
-            String age = editAge.getText().toString().trim();
-
-            if (name.isEmpty() || id.isEmpty() || age.isEmpty()) {
-                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Combine data into one string (or just use ID)
-            String qrData = "Patient ID: " + id + "\nName: " + name + "\nAge: " + age;
-
-            ImageView qrImage = dialogView.findViewById(R.id.imageViewQRCode);
-
-            try {
-                BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-                Bitmap bitmap = barcodeEncoder.encodeBitmap(qrData, BarcodeFormat.QR_CODE, 400, 400);
-                qrImage.setImageBitmap(bitmap);
-                qrImage.setVisibility(View.VISIBLE); // Show the QR after generation
-            } catch (WriterException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Error generating QR", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        dialog.show();
-    }
 
     private void showQRDisplayDialog(String qrData) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_show_qr, null);
@@ -360,6 +324,14 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
             e.printStackTrace();
             Toast.makeText(this, "Error playing video background", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // Implement the OnPatientClickListener interface method
+    @Override
+    public void onPatientClick(Patient patient, int position) {
+
+        Intent intent = new Intent(this, historyActivity.class);
+        startActivity(intent);
     }
 
 

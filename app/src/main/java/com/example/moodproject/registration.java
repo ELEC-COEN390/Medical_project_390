@@ -31,10 +31,12 @@ public class registration extends AppCompatActivity {
 
     private FirebaseHelper firebaseHelper;
     private EditText password;
+    private EditText name;
     private Button signupbutton;
     private EditText email;
 
     private FirebaseAuth mAuth;
+
     VideoView videoBackground;
 
     // Firebase Authentication
@@ -54,6 +56,7 @@ public class registration extends AppCompatActivity {
         firebaseHelper = FirebaseHelper.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
+        name = findViewById(R.id.name);
         password = findViewById(R.id.password);
         email = findViewById(R.id.email);
         signupbutton = findViewById(R.id.signup_button);
@@ -160,10 +163,17 @@ public class registration extends AppCompatActivity {
         }
     }
     private void registerUser() {
+        // Get user input
+        String nameText = name.getText().toString();
         String emailText = email.getText().toString().trim();
         String passwordText = password.getText().toString().trim();
 
         // Validate inputs
+        if (TextUtils.isEmpty(nameText)) {
+            name.setError("Name is required");
+            return;
+        }
+
         if (TextUtils.isEmpty(emailText)) {
             email.setError("Email is required");
             return;
@@ -186,6 +196,8 @@ public class registration extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+
+                            firebaseHelper.saveUserName(nameText);
                             // Sign in success, update UI with the signed-in user's information
                             FirebaseUser user = mAuth.getCurrentUser();
 

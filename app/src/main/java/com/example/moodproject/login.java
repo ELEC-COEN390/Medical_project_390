@@ -77,17 +77,17 @@ public class login extends AppCompatActivity {
         // Optional: Add a forgot password functionality
         forgotPassword = findViewById(R.id.forgot_password);
         forgotPassword.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View v) {
-                 // Send password reset email
-                 String emailAddress = email.getText().toString().trim();
-                 if (!TextUtils.isEmpty(emailAddress)) {
-                     sendPasswordResetEmail(emailAddress);
-                 } else {
-                     email.setError("Please enter your email");
-                 }
-             }
-         });
+            @Override
+            public void onClick(View v) {
+                // Send password reset email
+                String emailAddress = email.getText().toString().trim();
+                if (!TextUtils.isEmpty(emailAddress)) {
+                    sendPasswordResetEmail(emailAddress);
+                } else {
+                    email.setError("Please enter your email");
+                }
+            }
+        });
 
 
         register.setOnClickListener(new View.OnClickListener() {

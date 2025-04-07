@@ -32,6 +32,19 @@
     <color name="purple_500">#6200EE</color>
     <color name="purple_700">#3700B3</color> <!-- Add this line -->
     <color name="teal_200">#03DAC5</color>
+    <color name="whiteloop">#F6F5F5</color>
+
+    <color name="background_dark">#121212</color>
+    <color name="primary">#2196F3</color>
+    <color name="primary_dark">#1976D2</color>
+    <color name="accent">#FF4081</color>
+
+    <color name="amber">#FFB300</color>
+    <color name="gray">#888888</color>
+
+    <color name="white_70">#B3FFFFFF</color>
+    <color name="white_30">#4DFFFFFF</color>
+
 
 
 </resources>
