@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_add_patient"
+        android:icon="@android:drawable/ic_input_add"
+        android:title="Add New Patient" />
+    <item
+        android:id="@+id/menu_scan_qr"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:title="Scan Patient QR Code"
+        android:visible="true" />
+</menu>
