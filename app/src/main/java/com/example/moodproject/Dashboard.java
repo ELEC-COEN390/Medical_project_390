@@ -119,6 +119,8 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private File lastRecordedFile;
 
     private static final int PERMISSION_REQUEST_CODE = 200;
+
+    private String sentence;
     private String[] requiredPermissions = {
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_NETWORK_STATE,
@@ -138,6 +140,9 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 //            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
 //            return insets;
 //        });
+
+        sentence = "No History";
+
 
 
         // Initialize UI components
@@ -219,6 +224,14 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
     public void updateRecognizedText(String text) {
         // Update the recognized text
+        if(sentence.startsWith("No History")){
+
+            sentence = "";
+            sentence =text;
+        }
+        else
+            sentence.concat(text);
+
     }
 
     // Setup the navigation drawer
@@ -257,10 +270,14 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             // Intent intent = new Intent(this, SettingsActivity.class);
             // startActivity(intent);
         } else if (id == R.id.nav_history) {
-            Toast.makeText(this, "Recording History", Toast.LENGTH_SHORT).show();
-            // Launch history activity
-            // Intent intent = new Intent(this, HistoryActivity.class);
-            // startActivity(intent);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("About ESP32 Audio Client");
+            builder.setMessage(sentence);
+            builder.setPositiveButton("OK", null);
+            builder.show();
+
+
         } else if (id == R.id.nav_wifi_settings) {
             Toast.makeText(this, "WiFi Settings", Toast.LENGTH_SHORT).show();
             // Open WiFi settings
