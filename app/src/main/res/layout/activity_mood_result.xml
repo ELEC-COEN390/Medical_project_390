@@ -75,7 +75,7 @@
                     android:orientation="horizontal"
                     android:padding="24dp">
 
-                    <ImageView
+                    <ImageButton
                         android:id="@+id/mood1"
                         android:layout_width="79dp"
                         android:layout_height="78dp"
@@ -84,19 +84,21 @@
                         android:scaleType="centerInside"
                         android:src="@drawable/crying_face_1f622" /> <!-- optional spacing between emojis -->
 
-                    <ImageView
+                    <ImageButton
                         android:id="@+id/mood2"
                         android:layout_width="78dp"
                         android:layout_height="79dp"
                         android:layout_marginEnd="8dp"
                         android:scaleType="centerInside"
+                        android:clickable="true"
                         android:src="@drawable/fearful_face_1f628" />
 
-                    <ImageView
+                    <ImageButton
                         android:id="@+id/mood3"
                         android:layout_width="78dp"
                         android:layout_height="82dp"
                         android:scaleType="centerInside"
+                        android:clickable="true"
                         android:src="@drawable/nauseated_face_1f922" />
                 </LinearLayout>
         <LinearLayout
