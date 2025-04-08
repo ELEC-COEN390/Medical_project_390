@@ -2,26 +2,24 @@ package com.example.moodproject;
 
 import android.content.Context;
 import android.util.Log;
-
 import com.jlibrosa.audio.JLibrosa;
-import com.jlibrosa.audio.exception.FileFormatNotSupportedException;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Locale;
 
 public class MFCCExtractor {
+
+    private static final String TAG = "MFCCExtractor";
+
     private static final int SAMPLE_RATE = 44100;
-    private static final int NUM_MFCC = 13;
+    private static final int NUM_MFCC = 284;       // Model expects 284 MFCC coefficients
     private static final int N_FFT = 2048;
-    private static final int N_MELS = 128;
     private static final int HOP_LENGTH = 512;
+    private static final int N_MELS = 284;         // Match NUM_MFCC for consistency
+    private static final int EXPECTED_FRAMES = 30; // Exactly match your model input frames
 
     private Context context;
 
@@ -30,183 +28,91 @@ public class MFCCExtractor {
     }
 
     public float[][][] extractMFCCFeatures(byte[] audioData) throws Exception {
-        // Create a temporary file for audio data
-        File tempAudioFile = createTempAudioFile(audioData);
+        File wavFile = createTempWavFile(audioData);
+
+        // Set locale temporarily to avoid decimal errors
+        Locale originalLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
 
         try {
-            // Initialize JLibrosa
             JLibrosa jLibrosa = new JLibrosa();
 
-            // Load audio file
             float[] audioFloatArray = jLibrosa.loadAndRead(
-                    tempAudioFile.getAbsolutePath(),
-                    SAMPLE_RATE,  // Sample rate
-                    -1             // Full audio length
+                    wavFile.getAbsolutePath(), SAMPLE_RATE, -1
             );
 
-            // Generate MFCC features with more detailed parameters
-            float[][] mfccFeatures = jLibrosa.generateMFCCFeatures(
-                    audioFloatArray,     // Audio data
-                    SAMPLE_RATE,         // Sample rate
-                    NUM_MFCC,            // Number of MFCC coefficients
-                    N_FFT,               // FFT window size
-                    N_MELS,              // Number of mel bands
-                    HOP_LENGTH           // Hop length between frames
+            float[][] mfcc = jLibrosa.generateMFCCFeatures(
+                    audioFloatArray, SAMPLE_RATE, NUM_MFCC, N_FFT, N_MELS, HOP_LENGTH
             );
 
-            // Reshape to match TensorFlow Lite model input
-            float[][][] formattedMFCCs = new float[1][mfccFeatures.length][mfccFeatures[0].length];
-            for (int i = 0; i < mfccFeatures.length; i++) {
-                formattedMFCCs[0][i] = mfccFeatures[i];
-            }
+            // Log original dimensions
+            Log.d(TAG, "MFCC dimensions before resize: frames=" + mfcc.length + ", coeffs=" + mfcc[0].length);
 
-            return formattedMFCCs;
+            // Resize MFCC array to exactly [30 frames x 284 features]
+            mfcc = resizeMFCC(mfcc, EXPECTED_FRAMES, NUM_MFCC);
+
+            // Wrap in [1,30,284] shape
+            return new float[][][]{mfcc};
 
         } catch (Exception e) {
-            Log.e("MFCCExtractor", "Error extracting MFCC features", e);
-            throw new Exception("MFCC extraction failed", e);
+            Log.e(TAG, "Error extracting MFCC: ", e);
+            throw new Exception("MFCC extraction failed: " + e.getMessage(), e);
         } finally {
-            // Clean up temporary file
-            if (tempAudioFile != null) {
-                tempAudioFile.delete();
-            }
+            if (wavFile.exists()) wavFile.delete();
+            Locale.setDefault(originalLocale); // restore original locale
         }
     }
 
-    private File createTempAudioFile(byte[] audioData) throws IOException {
-        File tempFile = File.createTempFile("audio_chunk", ".wav", context.getCacheDir());
+    /** Resize MFCC array to match the expected model input shape precisely */
+    private float[][] resizeMFCC(float[][] originalMFCC, int targetFrames, int targetCoeffs) {
+        float[][] resizedMFCC = new float[targetFrames][targetCoeffs];
 
-        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-            writeWavHeader(fos, audioData.length);
-            fos.write(audioData);
+        int framesToCopy = Math.min(targetFrames, originalMFCC.length);
+        int coeffsToCopy = Math.min(targetCoeffs, originalMFCC[0].length);
+
+        for (int i = 0; i < framesToCopy; i++) {
+            System.arraycopy(originalMFCC[i], 0, resizedMFCC[i], 0, coeffsToCopy);
         }
 
-        return tempFile;
+        // Remaining cells are zero-filled if original is smaller
+        return resizedMFCC;
     }
 
-    private void writeWavHeader(FileOutputStream fos, int dataLength) throws IOException {
-        // WAV header writing logic (similar to previous implementation)
-        byte[] header = new byte[44];
+    /** Create valid WAV file from PCM audio data */
+    private File createTempWavFile(byte[] pcmData) throws IOException {
+        File tempWav = File.createTempFile("audio_chunk", ".wav", context.getCacheDir());
 
-        // RIFF chunk
-        header[0] = 'R'; header[1] = 'I'; header[2] = 'F'; header[3] = 'F';
-
-        // Overall file size
-        writeInt(header, 4, dataLength + 36);
-
-        // WAVE header
-        header[8] = 'W'; header[9] = 'A'; header[10] = 'V'; header[11] = 'E';
-
-        // fmt chunk
-        header[12] = 'f'; header[13] = 'm'; header[14] = 't'; header[15] = ' ';
-
-        // Subchunk1Size
-        writeInt(header, 16, 16);
-
-        // Audio format (1 = PCM)
-        writeShort(header, 20, (short)1);
-
-        // Number of channels
-        writeShort(header, 22, (short)1);
-
-        // Sample rate
-        writeInt(header, 24, SAMPLE_RATE);
-
-        // Byte rate
-        writeInt(header, 28, SAMPLE_RATE * 2);
-
-        // Block align
-        writeShort(header, 32, (short)2);
-
-        // Bits per sample
-        writeShort(header, 34, (short)16);
-
-        // Data chunk
-        header[36] = 'd'; header[37] = 'a'; header[38] = 't'; header[39] = 'a';
-
-        // Data size
-        writeInt(header, 40, dataLength);
-
-        fos.write(header);
-    }
-
-    private void writeInt(byte[] buffer, int offset, int value) {
-        buffer[offset] = (byte)(value & 0xFF);
-        buffer[offset + 1] = (byte)((value >> 8) & 0xFF);
-        buffer[offset + 2] = (byte)((value >> 16) & 0xFF);
-        buffer[offset + 3] = (byte)((value >> 24) & 0xFF);
-    }
-
-    private void writeShort(byte[] buffer, int offset, short value) {
-        buffer[offset] = (byte)(value & 0xFF);
-        buffer[offset + 1] = (byte)((value >> 8) & 0xFF);
-    }
-
-    // Utility methods for processing
-    public String getMaxEmotion(Map<String, Float> emotions) {
-        String maxEmotion = "";
-        float maxValue = 0;
-
-        for (Map.Entry<String, Float> entry : emotions.entrySet()) {
-            if (entry.getValue() > maxValue) {
-                maxValue = entry.getValue();
-                maxEmotion = entry.getKey();
-            }
+        try (FileOutputStream fos = new FileOutputStream(tempWav)) {
+            writeWavHeader(fos, pcmData.length);
+            fos.write(pcmData);
         }
 
-        return maxEmotion;
+        return tempWav;
     }
 
-    public Map<String, Float> aggregateEmotionResults(List<Map<String, Float>> secondResults) {
-        Map<String, Float> aggregated = new HashMap<>();
+    /** Proper WAV header generation for PCM data */
+    private void writeWavHeader(FileOutputStream fos, int audioDataLength) throws IOException {
+        int totalDataLen = audioDataLength + 36;
+        int channels = 1;
+        int byteRate = SAMPLE_RATE * channels * 16 / 8;
 
-        // Get all emotion labels from the first second
-        Set<String> emotionLabels = secondResults.get(0).keySet();
+        ByteBuffer header = ByteBuffer.allocate(44);
+        header.order(ByteOrder.LITTLE_ENDIAN);
 
-        // Initialize aggregated values
-        for (String emotion : emotionLabels) {
-            aggregated.put(emotion, 0.0f);
-        }
+        header.put("RIFF".getBytes());
+        header.putInt(totalDataLen);
+        header.put("WAVE".getBytes());
+        header.put("fmt ".getBytes());
+        header.putInt(16);                     // PCM format chunk size
+        header.putShort((short) 1);            // PCM audio format
+        header.putShort((short) channels);
+        header.putInt(SAMPLE_RATE);
+        header.putInt(byteRate);
+        header.putShort((short) (channels * 16 / 8)); // Block align
+        header.putShort((short) 16);           // Bits per sample
+        header.put("data".getBytes());
+        header.putInt(audioDataLength);
 
-        // Sum up confidence values across seconds
-        for (Map<String, Float> secondResult : secondResults) {
-            for (String emotion : emotionLabels) {
-                aggregated.put(
-                        emotion,
-                        aggregated.get(emotion) + secondResult.getOrDefault(emotion, 0.0f)
-                );
-            }
-        }
-
-        // Normalize by dividing by the number of seconds
-        for (String emotion : emotionLabels) {
-            aggregated.put(
-                    emotion,
-                    aggregated.get(emotion) / secondResults.size()
-            );
-        }
-
-        return aggregated;
-    }
-
-    public Map<String, Float> processModelOutputForSecond(float[] output, int secondIndex) {
-        Map<String, Float> emotions = new HashMap<>();
-
-        // Emotion labels (should match your model's output order)
-        String[] emotionLabels = {
-                "angry", "calm", "disgust", "fearful", "happy", "neutral", "sad", "surprised"
-        };
-
-        // Store emotion confidences
-        for (int i = 0; i < output.length && i < emotionLabels.length; i++) {
-            emotions.put(emotionLabels[i], output[i]);
-        }
-
-        // Log the detected emotion for this second
-        String maxEmotion = getMaxEmotion(emotions);
-        Log.d("MFCCExtractor", "Second " + secondIndex + ": " +
-                maxEmotion + " (" + emotions.get(maxEmotion) + ")");
-
-        return emotions;
+        fos.write(header.array());
     }
 }

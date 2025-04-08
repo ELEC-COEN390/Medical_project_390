@@ -91,7 +91,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private static final int CONNECTION_TIMEOUT = 5000; // 5 seconds
 
     // 10 seconds of audio at 44.1kHz, 16-bit, mono
-    private static final int RECORDING_DURATION_MS = 10000;
+    private static final int RECORDING_DURATION_MS = 30000;
     static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
     private static final int TOTAL_BYTES = (SAMPLE_RATE * RECORDING_DURATION_MS / 1000) * BYTES_PER_SAMPLE;
 
@@ -483,14 +483,14 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                 statusText.setText("Recording complete");
                 // Process speech to text
                 setSpeachToText();
-/*
+
                 // Create MFCCExtractor with context
                 MFCCExtractor mfccExtractor = new MFCCExtractor(Dashboard.this);
 
                 new Thread(() -> {
                     try {
                         // The number of samples in 1 second of audio
-                        int samplesPerSecond = SAMPLE_RATE;
+                        int samplesPerSecond = SAMPLE_RATE*3;
                         int bytesPerSecond = samplesPerSecond * BYTES_PER_SAMPLE;
 
                         // List to store emotion results for each second
@@ -498,7 +498,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
                         // Load the TensorFlow Lite model
                         org.tensorflow.lite.Interpreter interpreter =
-                                new org.tensorflow.lite.Interpreter(loadModelFile());
+                                new org.tensorflow.lite.Interpreter(loadModelFile(), getInterpreterOptions());
+
+                        // Log model input/output info to help with debugging
+                        logModelInfo(interpreter);
 
                         // Process each 1-second chunk
                         for (int i = 0; i < 10; i++) {
@@ -506,30 +509,44 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                             byte[] secondData = new byte[bytesPerSecond];
                             System.arraycopy(audioData, i * bytesPerSecond, secondData, 0, bytesPerSecond);
 
-                            // Convert audio chunk to MFCC features
-                            float[][][] mfccFeatures = mfccExtractor.extractMFCCFeatures(secondData);
+                            try {
+                                // Convert audio chunk to MFCC features
+                                float[][][] mfccFeatures = mfccExtractor.extractMFCCFeatures(secondData);
 
-                            // Prepare output buffer for model result
-                            float[][] outputBuffer = new float[1][8]; // Assuming 8 emotion classes
+                                // Prepare output buffer for model result
+                                float[][] outputBuffer = new float[1][8]; // Assuming 8 emotion classes
 
-                            // Run model inference
-                            interpreter.run(mfccFeatures, outputBuffer);
+                                // Run model inference
+                                interpreter.run(mfccFeatures, outputBuffer);
 
-                            // Process the results for this second
-                            Map<String, Float> secondEmotions = mfccExtractor.processModelOutputForSecond(outputBuffer[0], i);
-                            emotionResults.add(secondEmotions);
+                                // Process the results for this second
+                                Map<String, Float> secondEmotions = processModelOutputForSecond(outputBuffer[0], i);
+                                emotionResults.add(secondEmotions);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error processing second " + i + ": " + e.getMessage());
+                                // Continue processing other seconds
+                            }
                         }
 
                         // Release model resources
                         interpreter.close();
 
-                        // Aggregate results across all seconds
-                        Map<String, Float> aggregatedEmotions = mfccExtractor.aggregateEmotionResults(emotionResults);
+                        // Only proceed if we have at least one result
+                        if (!emotionResults.isEmpty()) {
+                            // Aggregate results across all seconds
+                            Map<String, Float> aggregatedEmotions = aggregateEmotionResults(emotionResults);
 
-                        // Launch results activity
-                        runOnUiThread(() -> {
-                            launchResultsActivity(emotionResults, aggregatedEmotions);
-                        });
+                            // Launch results activity
+                            runOnUiThread(() -> {
+                                launchResultsActivity(emotionResults, aggregatedEmotions);
+                            });
+                        } else {
+                            runOnUiThread(() -> {
+                                Toast.makeText(Dashboard.this,
+                                        "No emotions could be analyzed from the audio",
+                                        Toast.LENGTH_SHORT).show();
+                            });
+                        }
 
                     } catch (Exception e) {
                         Log.e(TAG, "Error processing audio with TensorFlow: " + e.getMessage());
@@ -541,16 +558,65 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                                     Toast.LENGTH_SHORT).show();
                         });
                     }
-                }).start();*/
-
-
+                }).start();
             } else {
                 statusText.setText("Recording failed");
             }
         }
+
+// Add these helper methods to the Dashboard class
+
+        /**
+         * Get TensorFlow Lite interpreter options for better error logging
+         */
+        private org.tensorflow.lite.Interpreter.Options getInterpreterOptions() {
+            org.tensorflow.lite.Interpreter.Options options = new org.tensorflow.lite.Interpreter.Options();
+            options.setNumThreads(4); // Use 4 threads for better performance
+            return options;
+        }
+
+        /**
+         * Log info about the TensorFlow Lite model for debugging
+         */
+        private void logModelInfo(org.tensorflow.lite.Interpreter interpreter) {
+            try {
+                int inputTensorCount = interpreter.getInputTensorCount();
+                int outputTensorCount = interpreter.getOutputTensorCount();
+
+                Log.d(TAG, "Model has " + inputTensorCount + " input tensors and "
+                        + outputTensorCount + " output tensors");
+
+                for (int i = 0; i < inputTensorCount; i++) {
+                    int[] shape = interpreter.getInputTensor(i).shape();
+                    String shapeStr = "";
+                    for (int dim : shape) {
+                        shapeStr += dim + "x";
+                    }
+                    if (shapeStr.endsWith("x")) {
+                        shapeStr = shapeStr.substring(0, shapeStr.length() - 1);
+                    }
+
+                    Log.d(TAG, "Input tensor " + i + " shape: " + shapeStr);
+                }
+
+                for (int i = 0; i < outputTensorCount; i++) {
+                    int[] shape = interpreter.getOutputTensor(i).shape();
+                    String shapeStr = "";
+                    for (int dim : shape) {
+                        shapeStr += dim + "x";
+                    }
+                    if (shapeStr.endsWith("x")) {
+                        shapeStr = shapeStr.substring(0, shapeStr.length() - 1);
+                    }
+
+                    Log.d(TAG, "Output tensor " + i + " shape: " + shapeStr);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting model info: " + e.getMessage());
+            }
+        }
+
     }
-
-
 
     // Save audio data to file and process for speech recognition
     private void saveAudioToFile() {
