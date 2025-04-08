@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import com.bumptech.glide.Glide;
 public class MoodResult extends AppCompatActivity {
 
     private DatabaseReference databaseReference;
@@ -64,7 +64,7 @@ public class MoodResult extends AppCompatActivity {
         if (!top3Moods.isEmpty()) {
             String mainMood = top3Moods.get(0);
             moodResult.setText(mainMood);
-            moodDisplay.setImageResource(getMoodGif(mainMood));
+            Glide.with(this).load(getMoodGif(mainMood)).into(moodDisplay);
             moodAccuracy.setText(getAccuracy(mainMood) + "%");
 
             mood1.setImageResource(getMoodImage(top3Moods.get(0)));
@@ -78,7 +78,7 @@ public class MoodResult extends AppCompatActivity {
             public void onClick(View v) {
                 String mood = top3Moods.get(0);
                 moodResult.setText(mood);
-                moodDisplay.setImageResource(getMoodGif(mood));
+                Glide.with(MoodResult.this).load(getMoodGif(mood)).into(moodDisplay);
                 moodAccuracy.setText(getAccuracy(mood) + "%");
             }
         });
@@ -86,9 +86,9 @@ public class MoodResult extends AppCompatActivity {
         mood2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String mood = top3Moods.get(1);
+                String mood = top3Moods.get(1); // Changed from 0 to 1
                 moodResult.setText(mood);
-                moodDisplay.setImageResource(getMoodGif(mood));
+                Glide.with(MoodResult.this).load(getMoodGif(mood)).into(moodDisplay);
                 moodAccuracy.setText(getAccuracy(mood) + "%");
             }
         });
@@ -96,9 +96,9 @@ public class MoodResult extends AppCompatActivity {
         mood3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String mood = top3Moods.get(2);
+                String mood = top3Moods.get(2); // Changed from 0 to 2
                 moodResult.setText(mood);
-                moodDisplay.setImageResource(getMoodGif(mood));
+                Glide.with(MoodResult.this).load(getMoodGif(mood)).into(moodDisplay);
                 moodAccuracy.setText(getAccuracy(mood) + "%");
             }
         });
@@ -110,6 +110,8 @@ public class MoodResult extends AppCompatActivity {
                 finish(); // Go back to the previous screen
             }
         });
+
+
     }
 
     /**
