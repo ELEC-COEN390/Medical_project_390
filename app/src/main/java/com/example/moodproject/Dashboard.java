@@ -91,7 +91,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private static final int CONNECTION_TIMEOUT = 5000; // 5 seconds
 
     // 10 seconds of audio at 44.1kHz, 16-bit, mono
-    private static final int RECORDING_DURATION_MS = 30000;
+    private static final int RECORDING_DURATION_MS = 10000;
     static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
     private static final int TOTAL_BYTES = (SAMPLE_RATE * RECORDING_DURATION_MS / 1000) * BYTES_PER_SAMPLE;
 
@@ -490,7 +490,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                 new Thread(() -> {
                     try {
                         // The number of samples in 1 second of audio
-                        int samplesPerSecond = SAMPLE_RATE*3;
+                        int samplesPerSecond = SAMPLE_RATE;
                         int bytesPerSecond = samplesPerSecond * BYTES_PER_SAMPLE;
 
                         // List to store emotion results for each second
