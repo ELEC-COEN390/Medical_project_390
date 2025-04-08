@@ -283,6 +283,9 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             mAuth.signOut();
 
             finish();
+        } else if (id == R.id.doc_add){
+            Intent intent = new Intent(this, GetADoctor.class);
+            startActivity(intent);
         }
 
         // Close the drawer

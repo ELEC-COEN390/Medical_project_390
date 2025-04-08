@@ -68,6 +68,7 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+
     // Vosk library for offline speech recognition
     implementation("com.alphacephei:vosk-android:0.3.47")
 
@@ -78,11 +79,13 @@ dependencies {
 
     implementation(files("libs/jlibrosa-1.1.8-SNAPSHOT-jar-with-dependencies.jar"))
 
-
+    implementation(libs.qr.scanner)
 
     // For handling JSON responses from Vosk
     implementation("org.json:json:20210307")
     implementation(libs.glide)
     annotationProcessor(libs.glideCompiler)
+
+
 }
 
