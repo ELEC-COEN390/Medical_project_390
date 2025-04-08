@@ -1,6 +1,5 @@
 package com.example.moodproject;
 
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.HorizontalScrollView;
@@ -45,3 +44,4 @@ public class SynchronizedScrollView extends HorizontalScrollView {
         }
     }
 }
+

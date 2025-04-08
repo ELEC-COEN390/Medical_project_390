@@ -4,19 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#213857"
-    tools:context=".historyActivity">
+    android:background="@color/background_dark"
+    tools:context=".MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#213857">
+        android:background="@color/background_dark">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="#213857"
+            android:background="@color/background_dark"
             app:title="Emotion Tracker"
             app:titleTextColor="@color/white" />
 
@@ -85,7 +85,7 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/time_header_scroll"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -122,7 +122,7 @@
                         <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="10PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
                         <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="11PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Emotion rows -->
@@ -151,11 +151,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Neutral"
-                        android:textColor="@color/white"
+                        android:textColor="@color/gray"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/neutral_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -168,7 +168,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Calm row -->
@@ -196,11 +196,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Calm"
-                        android:textColor="@color/white"
+                        android:textColor="@color/teal"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/calm_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -213,7 +213,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Happy row -->
@@ -241,11 +241,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Happy"
-                        android:textColor="@color/white"
+                        android:textColor="@color/yellow"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/happy_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -258,7 +258,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Sad row -->
@@ -286,11 +286,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Sad"
-                        android:textColor="@color/white"
+                        android:textColor="@color/blue"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/sad_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -303,7 +303,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Angry row -->
@@ -331,11 +331,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Angry"
-                        android:textColor="@color/white"
+                        android:textColor="@color/red"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/angry_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -348,7 +348,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Fearful row -->
@@ -376,11 +376,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Fearful"
-                        android:textColor="@color/white"
+                        android:textColor="@color/purple"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/fearful_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -393,7 +393,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Disgust row -->
@@ -421,11 +421,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Disgust"
-                        android:textColor="@color/white"
+                        android:textColor="@color/green"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/disgust_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -438,7 +438,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Surprised row -->
@@ -466,11 +466,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Surprised"
-                        android:textColor="@color/white"
+                        android:textColor="@color/orange"
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <com.example.moodproject.SynchronizedScrollView
+                <com.example.history.SynchronizedScrollView
                     android:id="@+id/surprised_scroll_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -483,7 +483,7 @@
                         android:orientation="horizontal">
                         <!-- 24 hour slots - will be filled programmatically -->
                     </LinearLayout>
-                </com.example.moodproject.SynchronizedScrollView>
+                </com.example.history.SynchronizedScrollView>
             </LinearLayout>
 
             <!-- Legend -->
@@ -545,6 +545,14 @@
             </LinearLayout>
 
             <!-- Add Emotion button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_emotion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Record New Emotion"
+                android:textAllCaps="false"
+                app:cornerRadius="8dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
