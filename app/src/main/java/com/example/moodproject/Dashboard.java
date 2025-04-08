@@ -481,7 +481,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
             if (success) {
                 statusText.setText("Recording complete");
-
+/*
                 // Create MFCCExtractor with context
                 MFCCExtractor mfccExtractor = new MFCCExtractor(Dashboard.this);
 
@@ -539,72 +539,16 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
                                     Toast.LENGTH_SHORT).show();
                         });
                     }
-                }).start();
+                }).start();*/
+
+
             } else {
                 statusText.setText("Recording failed");
             }
         }
     }
 
-    // Task to play recorded audio
-    private class PlayAudioTask extends AsyncTask<Void, Integer, Void> {
-        @Override
-        protected void onPreExecute() {
-            statusText.setText("Playing audio...");
-            loading.setVisibility(View.VISIBLE);
-//            progressBar.setProgress(0);
-            connectButton.setEnabled(false);
 
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            try {
-                audioTrack.play();
-
-                // Calculate chunks for smoother playback
-                int chunkSize = BUFFER_SIZE;
-                int totalChunks = TOTAL_BYTES / chunkSize;
-
-                for (int i = 0; i < totalChunks; i++) {
-                    int offset = i * chunkSize;
-                    int length = Math.min(chunkSize, TOTAL_BYTES - offset);
-
-                    audioTrack.write(audioData, offset, length);
-
-                    // Update progress
-                    int progress = (i * 100) / totalChunks;
-                    publishProgress(progress);
-                }
-
-                // Play any remaining data
-                int remainingBytes = TOTAL_BYTES % chunkSize;
-                if (remainingBytes > 0) {
-                    audioTrack.write(audioData, TOTAL_BYTES - remainingBytes, remainingBytes);
-                }
-
-                // Wait for playback to complete
-                audioTrack.stop();
-
-            } catch (Exception e) {
-                Log.e(TAG, "Playback error: " + e.getMessage());
-            }
-            return null;
-        }
-
-//        @Override
-//        protected void onProgressUpdate(Integer... values) {
-//            progressBar.setProgress(values[0]);
-//        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            statusText.setText("Playback complete");
-            loading.setVisibility(View.GONE);
-            connectButton.setEnabled(true);
-
-        }
-    }
 
     // Save audio data to file and process for speech recognition
     private void saveAudioToFile() {
@@ -887,7 +831,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
-        AssetFileDescriptor fileDescriptor = getAssets().openFd("your_model.tflite");
+        AssetFileDescriptor fileDescriptor = getAssets().openFd("model.tflite");
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
