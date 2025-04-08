@@ -277,11 +277,6 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         if (id == R.id.nav_home) {
             // Already on home screen, just close drawer
             Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-            // Launch settings activity
-            // Intent intent = new Intent(this, SettingsActivity.class);
-            // startActivity(intent);
         } else if (id == R.id.nav_history) {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
