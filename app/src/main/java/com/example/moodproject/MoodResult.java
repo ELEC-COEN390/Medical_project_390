@@ -1,16 +1,25 @@
 package com.example.moodproject;
 
+import android.content.Intent;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -25,6 +34,8 @@ public class MoodResult extends AppCompatActivity {
 
     private DatabaseReference databaseReference;
     private FirebaseDatabase database;
+
+    private VideoView videoBackground;
     private ImageView moodDisplay;
     private TextView moodResult;
     private TextView moodAccuracy;
@@ -41,6 +52,7 @@ public class MoodResult extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_mood_result);
+        makeFullScreen();
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -50,7 +62,9 @@ public class MoodResult extends AppCompatActivity {
         moodResult = findViewById(R.id.moodresult);
         moodAccuracy = findViewById(R.id.moodaccuracy);
         backButton = findViewById(R.id.button);
+        videoBackground = findViewById(R.id.videoBackground);
 
+        setupVideoBackground();
         mood1 = findViewById(R.id.mood1);
         mood2 = findViewById(R.id.mood2);
         mood3 = findViewById(R.id.mood3);
@@ -119,17 +133,47 @@ public class MoodResult extends AppCompatActivity {
      * This is where you would integrate with your deep learning model.
      */
     private void processDetectionResults() {
-        // TODO: Replace this with actual integration with your mood detection algorithm
+        // Initialize Firebase helper
+        FirebaseHelper firebaseHelper = FirebaseHelper.getInstance();
 
-        // Example: These would come from your mood detection model
-        moodAccuracies.put("happy", 85.7);
-        moodAccuracies.put("sad", 75.2);
-        moodAccuracies.put("fearful", 62.9);
-        moodAccuracies.put("angry", 45.3);
-        moodAccuracies.put("surprised", 38.1);
-        moodAccuracies.put("neutral", 32.5);
-        moodAccuracies.put("disgusted", 28.9);
-        moodAccuracies.put("calm", 21.4);
+        // Get user ID from intent
+        String userId = getIntent().getStringExtra("USER_ID");
+
+        // If no userId provided, use current user
+        if (userId == null || userId.isEmpty()) {
+            userId = firebaseHelper.getCurrentUserId();
+        }
+
+        // If we have a user ID, try to get emotion data from Firebase
+        if (userId != null && !userId.isEmpty()) {
+            firebaseHelper.getPredictions(new FirebaseHelper.EmotionDataCallback() {
+                @Override
+                public void onEmotionsLoaded(Map<String, Float> emotions) {
+                    if (emotions != null && !emotions.isEmpty()) {
+                        // Convert emotions from Map<String, Float> to Map<String, Double>
+                        for (Map.Entry<String, Float> entry : emotions.entrySet()) {
+                            moodAccuracies.put(entry.getKey(), entry.getValue() * 100.0); // Convert to percentage
+                        }
+
+                        // Update UI with the retrieved emotions
+                        updateMoodUI();
+                    } else {
+                        // If no emotions found in Firebase, fallback to intent extras
+                        fallbackToIntentExtras();
+                    }
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Log.e("MoodResult", "Error loading emotion data: " + errorMessage);
+                    // Fallback to intent extras if Firebase retrieval fails
+                    fallbackToIntentExtras();
+                }
+            });
+        } else {
+            // No user ID, fallback to intent extras
+            fallbackToIntentExtras();
+        }
     }
 
     /**
@@ -157,6 +201,24 @@ public class MoodResult extends AppCompatActivity {
 
         return top3;
     }
+
+    // Method to update the UI with the current mood accuracies
+    private void updateMoodUI() {
+        // Get the top three moods based on current moodAccuracies
+        List<String> top3Moods = getTopThreeMoods();
+
+        if (!top3Moods.isEmpty()) {
+            String mainMood = top3Moods.get(0);
+            moodResult.setText(mainMood);
+            Glide.with(this).load(getMoodGif(mainMood)).into(moodDisplay);
+            moodAccuracy.setText(getAccuracy(mainMood) + "%");
+
+            mood1.setImageResource(getMoodImage(top3Moods.get(0)));
+            mood2.setImageResource(getMoodImage(top3Moods.get(1)));
+            mood3.setImageResource(getMoodImage(top3Moods.get(2)));
+        }
+    }
+
 
     /**
      * Gets the accuracy for a given mood.
@@ -222,4 +284,115 @@ public class MoodResult extends AppCompatActivity {
                 return R.drawable.neutral_face_1f610gif;
         }
     }
+    private void makeFullScreen() {
+        // Make the activity full screen
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        // Hide the status bar and navigation bar
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(),
+                getWindow().getDecorView());
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        controller.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+
+        // Add these flags for older Android versions
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Resume video when activity comes back to foreground
+        if (videoBackground != null && !videoBackground.isPlaying()) {
+            videoBackground.start();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pause video when activity is not visible
+        if (videoBackground != null && videoBackground.isPlaying()) {
+            videoBackground.pause();
+        }
+    }
+
+    private void setupVideoBackground() {
+        try {
+            // Path to the video file in raw folder
+            Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/raw/wave");
+            videoBackground.setVideoURI(videoUri);
+
+            // Loop the video
+            videoBackground.setOnPreparedListener(mp -> {
+                mp.setLooping(true);
+                mp.setVolume(0, 0); // Mute the video
+
+                // Optional: scale the video
+                mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            });
+
+            // Start playing the video
+            videoBackground.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error playing video background", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void fallbackToIntentExtras() {
+        Intent intent = getIntent();
+
+        // Check if we have emotion data in the intent
+        if (intent.hasExtra("DETECTED_EMOTION")) {
+            String[] emotionLabels = {"angry", "calm", "disgust", "fearful", "happy", "neutral", "sad", "surprised"};
+
+            // Try to get emotion data from intent extras
+            for (String emotion : emotionLabels) {
+                String key = "EMOTION_" + emotion.toUpperCase();
+                if (intent.hasExtra(key)) {
+                    double value = intent.getFloatExtra(key, 0f);
+                    moodAccuracies.put(emotion, value);
+                }
+            }
+
+            // If we still don't have emotion data, use the detected emotion and confidence
+            if (moodAccuracies.isEmpty()) {
+                String dominantEmotion = intent.getStringExtra("DETECTED_EMOTION");
+                float confidence = intent.getFloatExtra("CONFIDENCE", 50f);
+
+                if (dominantEmotion != null && !dominantEmotion.isEmpty()) {
+                    moodAccuracies.put(dominantEmotion, (double) confidence);
+
+                    // Add some default secondary emotions
+                    if (!dominantEmotion.equals("neutral")) {
+                        moodAccuracies.put("neutral", 30.0);
+                    } else {
+                        moodAccuracies.put("calm", 30.0);
+                    }
+
+                    if (!dominantEmotion.equals("happy") && !moodAccuracies.containsKey("happy")) {
+                        moodAccuracies.put("happy", 20.0);
+                    } else if (!dominantEmotion.equals("calm") && !moodAccuracies.containsKey("calm")) {
+                        moodAccuracies.put("calm", 20.0);
+                    }
+                }
+            }
+        }
+
+        // If we still have no emotion data, use defaults
+        if (moodAccuracies.isEmpty()) {
+            moodAccuracies.put("neutral", 50.0);
+            moodAccuracies.put("happy", 30.0);
+            moodAccuracies.put("calm", 20.0);
+        }
+
+        // Update the UI with whatever emotion data we have
+        updateMoodUI();
+    }
+
 }

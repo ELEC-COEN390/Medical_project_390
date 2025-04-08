@@ -13,7 +13,9 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FirebaseHelper {
 
@@ -59,6 +61,13 @@ public class FirebaseHelper {
         void onDoctorsLoaded(List<DoctorAssignment> doctors);
         void onError(String errorMessage);
     }
+
+    // Add this interface to FirebaseHelper.java
+    public interface EmotionDataCallback {
+        void onEmotionsLoaded(Map<String, Float> emotions);
+        void onError(String errorMessage);
+    }
+
 
 
     private FirebaseHelper() {
@@ -188,6 +197,56 @@ public class FirebaseHelper {
                     }
                 });
 
+    }
+
+    public void getPredictions(EmotionDataCallback callback) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            callback.onError("User not authenticated");
+            return;
+        }
+
+        mDatabase.child("prediction").child(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            try {
+                                // Try to convert the data to a Map<String, Float>
+                                Map<String, Float> emotions = new HashMap<>();
+
+                                for (DataSnapshot emotionSnapshot : snapshot.getChildren()) {
+                                    String emotion = emotionSnapshot.getKey();
+                                    Float value = emotionSnapshot.getValue(Float.class);
+                                    if (emotion != null && value != null) {
+                                        emotions.put(emotion, value);
+                                    }
+                                }
+
+                                callback.onEmotionsLoaded(emotions);
+                            } catch (Exception e) {
+                                callback.onError("Error parsing emotion data: " + e.getMessage());
+                            }
+                        } else {
+                            callback.onEmotionsLoaded(new HashMap<>());
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        callback.onError(error.getMessage());
+                    }
+                });
+    }
+
+    public Task<Void> savePredictions(Map<String, Float> emotions){
+
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("User not authenticated");
+        }
+
+        return mDatabase.child("prediction").child(userId).setValue(emotions);
     }
 
     public Task<Void> saveUserPreferences(UserPreferences preferences) {

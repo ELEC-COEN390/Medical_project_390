@@ -32,8 +32,8 @@
 
     <ImageView
         android:id="@+id/mooddisplay"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="179dp"
+        android:layout_height="184dp"
         android:layout_below="@id/moodresult"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
@@ -77,8 +77,8 @@
 
                     <ImageView
                         android:id="@+id/mood1"
-                        android:layout_width="108dp"
-                        android:layout_height="110dp"
+                        android:layout_width="79dp"
+                        android:layout_height="78dp"
                         android:layout_marginEnd="8dp"
                         android:clickable="true"
                         android:scaleType="centerInside"
@@ -86,16 +86,16 @@
 
                     <ImageView
                         android:id="@+id/mood2"
-                        android:layout_width="105dp"
-                        android:layout_height="103dp"
+                        android:layout_width="78dp"
+                        android:layout_height="79dp"
                         android:layout_marginEnd="8dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/fearful_face_1f628" />
 
                     <ImageView
                         android:id="@+id/mood3"
-                        android:layout_width="105dp"
-                        android:layout_height="103dp"
+                        android:layout_width="78dp"
+                        android:layout_height="82dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/nauseated_face_1f922" />
                 </LinearLayout>

@@ -1129,43 +1129,51 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
      * @param secondResults List of emotion maps for each second
      * @param aggregatedResults Map of aggregated emotion confidences
      */
+    // In Dashboard.java, modify the launchResultsActivity method
     private void launchResultsActivity(List<Map<String, Float>> secondResults,
                                        Map<String, Float> aggregatedResults) {
         // Get the most prominent emotion overall
         String dominantEmotion = getMaxEmotion(aggregatedResults);
         float confidence = aggregatedResults.get(dominantEmotion) * 100; // Convert to percentage
 
-        // Launch on UI thread
-        runOnUiThread(() -> {
-            Intent intent = new Intent(Dashboard.this, MoodResult.class);
+        // Save the emotion data to Firebase
+        FirebaseHelper firebaseHelper = FirebaseHelper.getInstance();
 
-            // Add the overall detected emotion
-            intent.putExtra("DETECTED_EMOTION", dominantEmotion);
-            intent.putExtra("CONFIDENCE", confidence);
+        // Save aggregated results
+        firebaseHelper.savePredictions(aggregatedResults)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Successfully saved emotion data to Firebase");
 
-            // Add all emotions with their confidence values
-            for (Map.Entry<String, Float> entry : aggregatedResults.entrySet()) {
-                intent.putExtra("EMOTION_" + entry.getKey().toUpperCase(), entry.getValue() * 100);
-            }
+                    // Launch MoodResult activity after saving data
+                    Intent intent = new Intent(Dashboard.this, MoodResult.class);
 
-            // Add data for each second (useful for detailed analysis or visualization)
-            for (int i = 0; i < secondResults.size(); i++) {
-                Map<String, Float> secondData = secondResults.get(i);
+                    // Pass the user ID to MoodResult
+                    String userId = firebaseHelper.getCurrentUserId();
+                    intent.putExtra("USER_ID", userId);
 
-                // Get the dominant emotion for this second
-                String secondEmotion = getMaxEmotion(secondData);
-                intent.putExtra("SECOND_" + i + "_EMOTION", secondEmotion);
-                intent.putExtra("SECOND_" + i + "_CONFIDENCE", secondData.get(secondEmotion) * 100);
+                    // Also pass the dominant emotion as a fallback
+                    intent.putExtra("DETECTED_EMOTION", dominantEmotion);
+                    intent.putExtra("CONFIDENCE", confidence);
 
-                // Add all emotions for this second
-                for (Map.Entry<String, Float> entry : secondData.entrySet()) {
-                    intent.putExtra("SECOND_" + i + "_" + entry.getKey().toUpperCase(),
-                            entry.getValue() * 100);
-                }
-            }
+                    startActivity(intent);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to save emotion data: " + e.getMessage());
 
-            startActivity(intent);
-        });
+                    // Launch MoodResult activity even if saving failed, with intent extras as fallback
+                    Intent intent = new Intent(Dashboard.this, MoodResult.class);
+
+                    // Add the overall detected emotion
+                    intent.putExtra("DETECTED_EMOTION", dominantEmotion);
+                    intent.putExtra("CONFIDENCE", confidence);
+
+                    // Add all emotions with their confidence values as fallback
+                    for (Map.Entry<String, Float> entry : aggregatedResults.entrySet()) {
+                        intent.putExtra("EMOTION_" + entry.getKey().toUpperCase(), entry.getValue() * 100);
+                    }
+
+                    startActivity(intent);
+                });
     }
 
 
