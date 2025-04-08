@@ -75,6 +75,18 @@ import java.util.Map;
 import com.jlibrosa.audio.JLibrosa;
 import com.jlibrosa.audio.process.AudioFeatureExtraction;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import androidx.annotation.NonNull;
+
+import com.example.moodproject.DoctorAssignment;
+
 public class Dashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "ESP32AudioClient";
@@ -125,7 +137,8 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             Manifest.permission.ACCESS_WIFI_STATE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO // Add record audio permission for speech recognition
+            Manifest.permission.RECORD_AUDIO, // Add record audio permission for speech recognition
+            Manifest.permission.CAMERA // Add this camera permission
     };
 
     @Override
@@ -268,6 +281,20 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         } else if (id == R.id.nav_connection) {
             Toast.makeText(this, "Connection Settings", Toast.LENGTH_SHORT).show();
             // Show connection dialog or activity
+
+            IntentIntegrator integrator = new IntentIntegrator(this);
+            integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE);
+            integrator.setPrompt("Scan Doctor QR Code");
+            integrator.setCameraId(0);  // Use default camera
+            integrator.setBeepEnabled(true);
+            integrator.setBarcodeImageEnabled(true);
+            integrator.setOrientationLocked(false);
+            integrator.initiateScan();
+
+
+
+
+
         } else if (id == R.id.nav_about) {
             Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
             // Show about dialog
@@ -298,6 +325,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         builder.setPositiveButton("OK", null);
         builder.show();
     }
+
+
+
+
 
     // Handle back button press
     @Override
@@ -844,6 +875,27 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() == null) {
+                Toast.makeText(this, "Scan cancelled", Toast.LENGTH_SHORT).show();
+            } else {
+                // We have a result - the doctor ID
+                String doctorId = result.getContents();
+                Toast.makeText(this, "Scanned: " + doctorId, Toast.LENGTH_SHORT).show();
+
+                // Process the doctor ID and connect patient to doctor
+                connectToDoctor(doctorId);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+
+
     private String[] getRequiredPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) { // Android 13+
             return new String[] {
@@ -872,6 +924,118 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             };
         }
     }
+
+    //Handle the QR code scanner
+
+
+    private void connectToDoctor(String doctorId) {
+        // Check if user is authenticated
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            Toast.makeText(this, "You must be logged in to connect with a doctor", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String patientId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String patientEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+
+        // Show progress dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Connecting");
+        builder.setMessage("Connecting to doctor...");
+        builder.setCancelable(false);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Log the action for debugging
+        Log.d(TAG, "Connecting patient " + patientId + " to doctor " + doctorId);
+
+        // Check database permissions by reading before writing
+        FirebaseDatabase.getInstance().getReference().child("users").child(patientId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        // If we can read, proceed with the connection
+                        proceedWithDoctorConnection(doctorId, patientId, patientEmail, dialog);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        dialog.dismiss();
+                        // This is where we get the permission error
+                        Log.e(TAG, "Database permission error: " + error.getMessage());
+                        Toast.makeText(Dashboard.this,
+                                "Firebase permission error: " + error.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void proceedWithDoctorConnection(String doctorId, String patientId,
+                                             String patientEmail, AlertDialog dialog) {
+        // Create a reference to doctor's email
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference()
+                .child("users").child(doctorId).child("email");
+
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String doctorEmail = "";
+                if (dataSnapshot.exists()) {
+                    doctorEmail = dataSnapshot.getValue(String.class);
+                }
+
+                // Create the assignment with a unique key
+                String assignmentKey = FirebaseDatabase.getInstance().getReference()
+                        .child("doctor_assignments").push().getKey();
+
+                // Create assignment object
+                DoctorAssignment assignment = new DoctorAssignment(
+                        doctorId,
+                        patientId,
+                        doctorEmail,
+                        patientEmail
+                );
+
+                // Add assignment to database
+                FirebaseDatabase.getInstance().getReference()
+                        .child("doctor_assignments").child(assignmentKey)
+                        .setValue(assignment)
+                        .addOnSuccessListener(aVoid -> {
+                            // Remove from unmatched patients
+                            FirebaseDatabase.getInstance().getReference()
+                                    .child("unmatched_patients").child(patientId)
+                                    .removeValue()
+                                    .addOnSuccessListener(aVoid1 -> {
+                                        dialog.dismiss();
+                                        Toast.makeText(Dashboard.this,
+                                                "Successfully connected to doctor!",
+                                                Toast.LENGTH_LONG).show();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        dialog.dismiss();
+                                        Toast.makeText(Dashboard.this,
+                                                "Error: " + e.getMessage(),
+                                                Toast.LENGTH_LONG).show();
+                                    });
+                        })
+                        .addOnFailureListener(e -> {
+                            dialog.dismiss();
+                            Toast.makeText(Dashboard.this,
+                                    "Error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                dialog.dismiss();
+                Toast.makeText(Dashboard.this,
+                        "Error: " + databaseError.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
 
     /**
      * Process the model output for a single second of audio
