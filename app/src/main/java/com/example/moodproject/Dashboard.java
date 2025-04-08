@@ -481,6 +481,8 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
             if (success) {
                 statusText.setText("Recording complete");
+                // Process speech to text
+                setSpeachToText();
 /*
                 // Create MFCCExtractor with context
                 MFCCExtractor mfccExtractor = new MFCCExtractor(Dashboard.this);
