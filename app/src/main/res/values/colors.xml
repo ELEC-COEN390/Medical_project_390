@@ -29,5 +29,10 @@
     <color name="other_red">#E53935</color>
     <color name="other_blue">#00B8D4</color>
     <color name="other_black">@android:color/darker_gray</color>
+    <color name="background_dark">#121212</color>
+    <color name="white_70">#B3FFFFFF</color>
+    <color name="gray">@color/grey</color>
+    <color name="white_30">#4DFFFFFF</color>
+
 
 </resources>
