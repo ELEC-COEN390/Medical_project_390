@@ -12,9 +12,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class FirebaseHelper {
@@ -402,6 +405,85 @@ public class FirebaseHelper {
         } else {
             // For doctors, just return the original task
             return saveTypeTask;
+        }
+    }
+
+    // Get emotion data for a specific date
+    public void getEmotionData(Calendar date, EmotionDataCallback callback) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            callback.onError("User not authenticated");
+            return;
+        }
+
+        // Format date as YYYY-MM-DD for Firebase path
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String dateString = dateFormat.format(date.getTime());
+
+        mDatabase.child("emotion_data").child(userId).child(dateString)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        Map<String, int[]> emotionData = new HashMap<>();
+
+                        // Initialize with empty arrays
+                        String[] emotions = {"neutral", "calm", "happy", "sad",
+                                "angry", "fearful", "disgust", "surprised"};
+                        for (String emotion : emotions) {
+                            emotionData.put(emotion, new int[24]);
+                        }
+
+                        // If data exists, fill in the values
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot emotionSnapshot : dataSnapshot.getChildren()) {
+                                String emotion = emotionSnapshot.getKey();
+                                if (emotionData.containsKey(emotion)) {
+                                    for (DataSnapshot hourSnapshot : emotionSnapshot.getChildren()) {
+                                        try {
+                                            int hour = Integer.parseInt(hourSnapshot.getKey());
+                                            Long intensityLong = hourSnapshot.getValue(Long.class);
+                                            int intensity = intensityLong != null ? intensityLong.intValue() : 0;
+
+                                            if (hour >= 0 && hour < 24) {
+                                                emotionData.get(emotion)[hour] = intensity;
+                                            }
+                                        } catch (NumberFormatException e) {
+                                            // Skip this entry if hour is not a valid number
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        callback.onEmotionDataLoaded(emotionData);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        callback.onError(databaseError.getMessage());
+                    }
+                });
+    }
+
+    // Save emotion data for a specific date
+    public Task<Void> saveEmotionData(Calendar date, String emotion, int hour, int intensity) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("User not authenticated");
+        }
+
+        // Format date as YYYY-MM-DD for Firebase path
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String dateString = dateFormat.format(date.getTime());
+
+        // If intensity is 0, remove the data
+        if (intensity == 0) {
+            return mDatabase.child("emotion_data").child(userId)
+                    .child(dateString).child(emotion).child(String.valueOf(hour)).removeValue();
+        } else {
+            return mDatabase.child("emotion_data").child(userId)
+                    .child(dateString).child(emotion).child(String.valueOf(hour)).setValue(intensity);
         }
     }
 
