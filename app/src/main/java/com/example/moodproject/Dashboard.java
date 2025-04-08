@@ -884,7 +884,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         Map<String, Float> emotions = new HashMap<>();
 
         // Map the outputs to emotions (adjust based on your model's output)
-        String[] emotionLabels = {"neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"};
+        String[] emotionLabels = {"angry", "calm", "disgust", "fearful", "happy", "neutral", "sad", "surprised"};
 
         // Store emotion confidences
         for (int i = 0; i < output.length && i < emotionLabels.length; i++) {
