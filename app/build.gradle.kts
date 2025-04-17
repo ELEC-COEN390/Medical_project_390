@@ -47,6 +47,9 @@ android {
             )
         }
     }
+    buildFeatures {
+        mlModelBinding = true
+    }
 }
 
 dependencies {
@@ -57,6 +60,10 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.metadata)
+    implementation(libs.tensorflow.lite.gpu)
+    implementation(files("libs\\jlibrosa-1.1.8-SNAPSHOT-javadoc.jar"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -67,14 +74,15 @@ dependencies {
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
     implementation("com.google.zxing:core:3.5.2")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+
+    implementation(files("libs/jlibrosa-1.1.8-SNAPSHOT-jar-with-dependencies.jar"))
+
+
 
     // For handling JSON responses from Vosk
     implementation("org.json:json:20210307")
+    implementation(libs.glide)
+    annotationProcessor(libs.glideCompiler)
 }
 
-// Make sure you have the jcenter repository in your project-level settings.gradle.kts file
-// repositories {
-//    google()
-//    mavenCentral()
-//    jcenter()
-// }

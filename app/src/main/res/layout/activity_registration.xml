@@ -52,10 +52,22 @@
                     android:textStyle="bold" />
 
                 <EditText
+                    android:id="@+id/name"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="30dp"
+                    android:drawableLeft="@drawable/baseline_emoji_people_24"
+                    android:drawablePadding="8dp"
+                    android:hint="Name"
+                    android:padding="8dp"
+                    android:textColor="@color/black"
+                    android:textColorHighlight="@color/cardview_dark_background" />
+
+                <EditText
                     android:id="@+id/email"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:layout_marginTop="50dp"
+                    android:layout_marginTop="30dp"
                     android:drawableLeft="@drawable/baseline_email_24"
                     android:drawablePadding="8dp"
                     android:hint="Email"
@@ -80,7 +92,7 @@
                     android:id="@+id/signup_button"
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:layout_marginTop="70dp"
+                    android:layout_marginTop="40dp"
                     android:backgroundTint="#213857"
                     android:text="Sign up"
                     android:textColor="@color/white"

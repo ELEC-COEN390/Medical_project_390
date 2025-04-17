@@ -7,15 +7,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.view.GravityCompat;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
@@ -30,6 +34,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,6 +44,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,9 +52,40 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.ShortBuffer;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.bumptech.glide.Glide;
+
+import org.tensorflow.lite.support.model.Model;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import org.vosk.android.StorageService;
+import org.tensorflow.lite.DataType;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.jlibrosa.audio.JLibrosa;
+import com.jlibrosa.audio.process.AudioFeatureExtraction;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import androidx.annotation.NonNull;
+
+import com.example.moodproject.DoctorAssignment;
 
 public class Dashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -67,15 +104,13 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
     // 10 seconds of audio at 44.1kHz, 16-bit, mono
     private static final int RECORDING_DURATION_MS = 10000;
-    private static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
+    static final int BYTES_PER_SAMPLE = 2; // 16-bit = 2 bytes
     private static final int TOTAL_BYTES = (SAMPLE_RATE * RECORDING_DURATION_MS / 1000) * BYTES_PER_SAMPLE;
 
     private Button connectButton;
-    private ImageButton recordButton;
+    private Button StartButton;
+    private ImageView loading;
     private TextView statusText;
-    private ProgressBar progressBar;
-    private TextView spokenText;
-    private TextView micLabel;
 
     private Socket socket;
     private byte[] audioData;
@@ -96,13 +131,16 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private File lastRecordedFile;
 
     private static final int PERMISSION_REQUEST_CODE = 200;
+
+    private String sentence;
     private String[] requiredPermissions = {
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_NETWORK_STATE,
             Manifest.permission.ACCESS_WIFI_STATE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO // Add record audio permission for speech recognition
+            Manifest.permission.RECORD_AUDIO, // Add record audio permission for speech recognition
+            Manifest.permission.CAMERA // Add this camera permission
     };
 
     @Override
@@ -110,28 +148,37 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_dashboard);
+//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.dashboard), (v, insets) -> {
+//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+//            return insets;
+//        });
+
+        sentence = "No History";
+
+
 
         // Initialize UI components
+
+        mAuth = FirebaseAuth.getInstance();
+
         connectButton = findViewById(R.id.connectButton);
-        recordButton = findViewById(R.id.ImageButton);
+        StartButton = findViewById(R.id.startButton);
         statusText = findViewById(R.id.statusText);
-        progressBar = findViewById(R.id.progressBar);
-        spokenText = findViewById(R.id.textView3);
+        loading = findViewById(R.id.imageView2);
+        loading.setImageResource(R.drawable.loading);
 
-        // May be null if not in your layout
-        try {
-            micLabel = findViewById(R.id.micLabel);
-        } catch (Exception e) {
-            Log.e(TAG, "micLabel not found in layout");
-        }
 
-        // Disable buttons initially
-        recordButton.setEnabled(false);
 
         videoBackground = findViewById(R.id.videoBackground);
 
         // Set up the video background
         setupVideoBackground();
+
+
+        // In your onCreate or wherever you want to load the GIF
+        ImageView loading = findViewById(R.id.imageView2);
+        Glide.with(this).asGif().load(R.drawable.loading).into(loading);
 
         // Set up the navigation drawer
         setupNavigationDrawer();
@@ -157,13 +204,13 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 // Remove the duplicate initialization
         if (checkPermissions()) {
             Log.d(TAG, "Permissions already granted, initializing speech recognizer");
-            initSpeechRecognizer();
+//            initSpeechRecognizer();
         } else {
             Log.d(TAG, "Requesting permissions");
             requestPermissions();
             // The initialization will happen in onRequestPermissionsResult
         }
-// Remove this line: initSpeechRecognizer();
+        initSpeechRecognizer();
 
 
         // Set button click listeners
@@ -174,15 +221,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             }
         });
 
-        recordButton.setOnClickListener(new View.OnClickListener() {
+        StartButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                if (!isRecording) {
-                    new RecordTask().execute();
-                } else {
-                    isRecording = false;
-                    statusText.setText("Recording stopped");
-                }
+            public void onClick(View view) {
+                new RecordTask().execute();
             }
         });
     }
@@ -193,12 +235,16 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         Log.d(TAG, "Speech recognizer initialized");
     }
 
-    // This method will be called by the VoskSpeechRecognizer to update the UI with recognized text
     public void updateRecognizedText(String text) {
-        // Update the UI with recognized text
-        if (spokenText != null) {
-            spokenText.setText(text);
+        // Update the recognized text
+        if(sentence.startsWith("No History")){
+
+            sentence = "";
+            sentence =text;
         }
+        else
+            sentence.concat(text);
+
     }
 
     // Setup the navigation drawer
@@ -231,16 +277,15 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         if (id == R.id.nav_home) {
             // Already on home screen, just close drawer
             Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-            // Launch settings activity
-            // Intent intent = new Intent(this, SettingsActivity.class);
-            // startActivity(intent);
         } else if (id == R.id.nav_history) {
-            Toast.makeText(this, "Recording History", Toast.LENGTH_SHORT).show();
-            // Launch history activity
-            // Intent intent = new Intent(this, HistoryActivity.class);
-            // startActivity(intent);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("About ESP32 Audio Client");
+            builder.setMessage(sentence);
+            builder.setPositiveButton("OK", null);
+            builder.show();
+
+
         } else if (id == R.id.nav_wifi_settings) {
             Toast.makeText(this, "WiFi Settings", Toast.LENGTH_SHORT).show();
             // Open WiFi settings
@@ -248,6 +293,20 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         } else if (id == R.id.nav_connection) {
             Toast.makeText(this, "Connection Settings", Toast.LENGTH_SHORT).show();
             // Show connection dialog or activity
+
+            IntentIntegrator integrator = new IntentIntegrator(this);
+            integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE);
+            integrator.setPrompt("Scan Doctor QR Code");
+            integrator.setCameraId(0);  // Use default camera
+            integrator.setBeepEnabled(true);
+            integrator.setBarcodeImageEnabled(true);
+            integrator.setOrientationLocked(false);
+            integrator.initiateScan();
+
+
+
+
+
         } else if (id == R.id.nav_about) {
             Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
             // Show about dialog
@@ -278,6 +337,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         builder.setPositiveButton("OK", null);
         builder.show();
     }
+
+
+
+
 
     // Handle back button press
     @Override
@@ -327,7 +390,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPreExecute() {
             statusText.setText("Connecting to ESP32...");
-            progressBar.setVisibility(View.VISIBLE);
+//            progressBar.setVisibility(View.VISIBLE);
             connectButton.setEnabled(false);
         }
 
@@ -354,17 +417,15 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
         @Override
         protected void onPostExecute(Boolean success) {
-            progressBar.setVisibility(View.GONE);
+            loading.setVisibility(View.GONE);
             connectButton.setEnabled(true);
-            recordButton.setEnabled(success);
+
 
             if (success) {
                 statusText.setText("Connected to ESP32");
-                recordButton.setEnabled(true);
                 Toast.makeText(Dashboard.this, "Connected to ESP32", Toast.LENGTH_SHORT).show();
             } else {
                 statusText.setText("Connection failed");
-                recordButton.setEnabled(false);
                 Toast.makeText(Dashboard.this, "Connection failed", Toast.LENGTH_SHORT).show();
             }
         }
@@ -377,16 +438,11 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         @Override
         protected void onPreExecute() {
             isRecording = true;
-            // recordButton.setText("Stop");
             statusText.setText("Recording...");
-            progressBar.setVisibility(View.VISIBLE);
-            progressBar.setProgress(0);
+            loading.setVisibility(View.VISIBLE);//gif
             startTime = System.currentTimeMillis();
 
-            // Update mic label if it exists
-            if (micLabel != null) {
-                micLabel.setText("Recording... 🔴");
-            }
+
         }
 
         @Override
@@ -448,12 +504,10 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         }
 
 
-
         @Override
         protected void onProgressUpdate(Integer... values) {
             int progress = values[0];
             if (progress >= 0) {
-                progressBar.setProgress(progress);
                 statusText.setText("Recording... " + progress + "%");
             } else if (progress == -1) {
                 statusText.setText("Error: Not connected");
@@ -462,85 +516,149 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             }
         }
 
+        // In your RecordTask's onPostExecute method
         @Override
         protected void onPostExecute(Boolean success) {
             isRecording = false;
-            //recordButton.setText("Record");
-            progressBar.setVisibility(View.GONE);
-
-            // Reset mic label if it exists
-            if (micLabel != null) {
-                micLabel.setText("Tap to Speak 🗣️");
-            }
+            loading.setVisibility(View.GONE);
 
             if (success) {
                 statusText.setText("Recording complete");
                 // Process speech to text
                 setSpeachToText();
+
+                // Create MFCCExtractor with context
+                MFCCExtractor mfccExtractor = new MFCCExtractor(Dashboard.this);
+
+                new Thread(() -> {
+                    try {
+                        // The number of samples in 1 second of audio
+                        int samplesPerSecond = SAMPLE_RATE;
+                        int bytesPerSecond = samplesPerSecond * BYTES_PER_SAMPLE;
+
+                        // List to store emotion results for each second
+                        List<Map<String, Float>> emotionResults = new ArrayList<>();
+
+                        // Load the TensorFlow Lite model
+                        org.tensorflow.lite.Interpreter interpreter =
+                                new org.tensorflow.lite.Interpreter(loadModelFile(), getInterpreterOptions());
+
+                        // Log model input/output info to help with debugging
+                        logModelInfo(interpreter);
+
+                        // Process each 1-second chunk
+                        for (int i = 0; i < 10; i++) {
+                            // Extract 1 second of audio data
+                            byte[] secondData = new byte[bytesPerSecond];
+                            System.arraycopy(audioData, i * bytesPerSecond, secondData, 0, bytesPerSecond);
+
+                            try {
+                                // Convert audio chunk to MFCC features
+                                float[][][] mfccFeatures = mfccExtractor.extractMFCCFeatures(secondData);
+
+                                // Prepare output buffer for model result
+                                float[][] outputBuffer = new float[1][8]; // Assuming 8 emotion classes
+
+                                // Run model inference
+                                interpreter.run(mfccFeatures, outputBuffer);
+
+                                // Process the results for this second
+                                Map<String, Float> secondEmotions = processModelOutputForSecond(outputBuffer[0], i);
+                                emotionResults.add(secondEmotions);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error processing second " + i + ": " + e.getMessage());
+                                // Continue processing other seconds
+                            }
+                        }
+
+                        // Release model resources
+                        interpreter.close();
+
+                        // Only proceed if we have at least one result
+                        if (!emotionResults.isEmpty()) {
+                            // Aggregate results across all seconds
+                            Map<String, Float> aggregatedEmotions = aggregateEmotionResults(emotionResults);
+
+                            // Launch results activity
+                            runOnUiThread(() -> {
+                                launchResultsActivity(emotionResults, aggregatedEmotions);
+                            });
+                        } else {
+                            runOnUiThread(() -> {
+                                Toast.makeText(Dashboard.this,
+                                        "No emotions could be analyzed from the audio",
+                                        Toast.LENGTH_SHORT).show();
+                            });
+                        }
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing audio with TensorFlow: " + e.getMessage());
+                        e.printStackTrace();
+
+                        runOnUiThread(() -> {
+                            Toast.makeText(Dashboard.this,
+                                    "Error analyzing emotions: " + e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }).start();
             } else {
                 statusText.setText("Recording failed");
             }
         }
-    }
 
-    // Task to play recorded audio
-    private class PlayAudioTask extends AsyncTask<Void, Integer, Void> {
-        @Override
-        protected void onPreExecute() {
-            statusText.setText("Playing audio...");
-            progressBar.setVisibility(View.VISIBLE);
-            progressBar.setProgress(0);
-            connectButton.setEnabled(false);
-            recordButton.setEnabled(false);
+// Add these helper methods to the Dashboard class
+
+        /**
+         * Get TensorFlow Lite interpreter options for better error logging
+         */
+        private org.tensorflow.lite.Interpreter.Options getInterpreterOptions() {
+            org.tensorflow.lite.Interpreter.Options options = new org.tensorflow.lite.Interpreter.Options();
+            options.setNumThreads(4); // Use 4 threads for better performance
+            return options;
         }
 
-        @Override
-        protected Void doInBackground(Void... voids) {
+        /**
+         * Log info about the TensorFlow Lite model for debugging
+         */
+        private void logModelInfo(org.tensorflow.lite.Interpreter interpreter) {
             try {
-                audioTrack.play();
+                int inputTensorCount = interpreter.getInputTensorCount();
+                int outputTensorCount = interpreter.getOutputTensorCount();
 
-                // Calculate chunks for smoother playback
-                int chunkSize = BUFFER_SIZE;
-                int totalChunks = TOTAL_BYTES / chunkSize;
+                Log.d(TAG, "Model has " + inputTensorCount + " input tensors and "
+                        + outputTensorCount + " output tensors");
 
-                for (int i = 0; i < totalChunks; i++) {
-                    int offset = i * chunkSize;
-                    int length = Math.min(chunkSize, TOTAL_BYTES - offset);
+                for (int i = 0; i < inputTensorCount; i++) {
+                    int[] shape = interpreter.getInputTensor(i).shape();
+                    String shapeStr = "";
+                    for (int dim : shape) {
+                        shapeStr += dim + "x";
+                    }
+                    if (shapeStr.endsWith("x")) {
+                        shapeStr = shapeStr.substring(0, shapeStr.length() - 1);
+                    }
 
-                    audioTrack.write(audioData, offset, length);
-
-                    // Update progress
-                    int progress = (i * 100) / totalChunks;
-                    publishProgress(progress);
+                    Log.d(TAG, "Input tensor " + i + " shape: " + shapeStr);
                 }
 
-                // Play any remaining data
-                int remainingBytes = TOTAL_BYTES % chunkSize;
-                if (remainingBytes > 0) {
-                    audioTrack.write(audioData, TOTAL_BYTES - remainingBytes, remainingBytes);
+                for (int i = 0; i < outputTensorCount; i++) {
+                    int[] shape = interpreter.getOutputTensor(i).shape();
+                    String shapeStr = "";
+                    for (int dim : shape) {
+                        shapeStr += dim + "x";
+                    }
+                    if (shapeStr.endsWith("x")) {
+                        shapeStr = shapeStr.substring(0, shapeStr.length() - 1);
+                    }
+
+                    Log.d(TAG, "Output tensor " + i + " shape: " + shapeStr);
                 }
-
-                // Wait for playback to complete
-                audioTrack.stop();
-
             } catch (Exception e) {
-                Log.e(TAG, "Playback error: " + e.getMessage());
+                Log.e(TAG, "Error getting model info: " + e.getMessage());
             }
-            return null;
         }
 
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            progressBar.setProgress(values[0]);
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            statusText.setText("Playback complete");
-            progressBar.setVisibility(View.GONE);
-            connectButton.setEnabled(true);
-            recordButton.setEnabled(true);
-        }
     }
 
     // Save audio data to file and process for speech recognition
@@ -573,7 +691,6 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private void processSpeechRecognition(File audioFile) {
         if (voskRecognizer != null) {
             // Show loading indicator
-            progressBar.setVisibility(View.VISIBLE);
             statusText.setText("Processing speech...");
 
             // Process the file in a background thread
@@ -582,7 +699,6 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
 
                 // Hide loading indicator on the UI thread
                 runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
                     statusText.setText("Speech processing complete");
                 });
             }).start();
@@ -609,7 +725,6 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
             processAudioDataForSpeechRecognition();
         } else {
             Log.e(TAG, "No recorded audio data found to process");
-            spokenText.setText("No audio recorded to transcribe");
         }
     }
 
@@ -772,6 +887,27 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() == null) {
+                Toast.makeText(this, "Scan cancelled", Toast.LENGTH_SHORT).show();
+            } else {
+                // We have a result - the doctor ID
+                String doctorId = result.getContents();
+                Toast.makeText(this, "Scanned: " + doctorId, Toast.LENGTH_SHORT).show();
+
+                // Process the doctor ID and connect patient to doctor
+                connectToDoctor(doctorId);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+
+
     private String[] getRequiredPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) { // Android 13+
             return new String[] {
@@ -801,6 +937,256 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
         }
     }
 
+    //Handle the QR code scanner
+
+
+    private void connectToDoctor(String doctorId) {
+        // Check if user is authenticated
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            Toast.makeText(this, "You must be logged in to connect with a doctor", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String patientId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String patientEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+
+        // Show progress dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Connecting");
+        builder.setMessage("Connecting to doctor...");
+        builder.setCancelable(false);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Log the action for debugging
+        Log.d(TAG, "Connecting patient " + patientId + " to doctor " + doctorId);
+
+        // Check database permissions by reading before writing
+        FirebaseDatabase.getInstance().getReference().child("users").child(patientId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        // If we can read, proceed with the connection
+                        proceedWithDoctorConnection(doctorId, patientId, patientEmail, dialog);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        dialog.dismiss();
+                        // This is where we get the permission error
+                        Log.e(TAG, "Database permission error: " + error.getMessage());
+                        Toast.makeText(Dashboard.this,
+                                "Firebase permission error: " + error.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void proceedWithDoctorConnection(String doctorId, String patientId,
+                                             String patientEmail, AlertDialog dialog) {
+        // Create a reference to doctor's email
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference()
+                .child("users").child(doctorId).child("email");
+
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String doctorEmail = "";
+                if (dataSnapshot.exists()) {
+                    doctorEmail = dataSnapshot.getValue(String.class);
+                }
+
+                // Create the assignment with a unique key
+                String assignmentKey = FirebaseDatabase.getInstance().getReference()
+                        .child("doctor_assignments").push().getKey();
+
+                // Create assignment object
+                DoctorAssignment assignment = new DoctorAssignment(
+                        doctorId,
+                        patientId,
+                        doctorEmail,
+                        patientEmail
+                );
+
+                // Add assignment to database
+                FirebaseDatabase.getInstance().getReference()
+                        .child("doctor_assignments").child(assignmentKey)
+                        .setValue(assignment)
+                        .addOnSuccessListener(aVoid -> {
+                            // Remove from unmatched patients
+                            FirebaseDatabase.getInstance().getReference()
+                                    .child("unmatched_patients").child(patientId)
+                                    .removeValue()
+                                    .addOnSuccessListener(aVoid1 -> {
+                                        dialog.dismiss();
+                                        Toast.makeText(Dashboard.this,
+                                                "Successfully connected to doctor!",
+                                                Toast.LENGTH_LONG).show();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        dialog.dismiss();
+                                        Toast.makeText(Dashboard.this,
+                                                "Error: " + e.getMessage(),
+                                                Toast.LENGTH_LONG).show();
+                                    });
+                        })
+                        .addOnFailureListener(e -> {
+                            dialog.dismiss();
+                            Toast.makeText(Dashboard.this,
+                                    "Error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                dialog.dismiss();
+                Toast.makeText(Dashboard.this,
+                        "Error: " + databaseError.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+
+    /**
+     * Process the model output for a single second of audio
+     * @param output TensorBuffer containing model output
+     * @param secondIndex The index of the current second (0-9)
+     * @return Map of emotion names to confidence values
+     */
+    private Map<String, Float> processModelOutputForSecond(float[] output, int secondIndex) {
+        // Map to store emotion confidence values
+        Map<String, Float> emotions = new HashMap<>();
+
+        // Map the outputs to emotions (adjust based on your model's output)
+        String[] emotionLabels = {"angry", "calm", "disgust", "fearful", "happy", "neutral", "sad", "surprised"};
+
+        // Store emotion confidences
+        for (int i = 0; i < output.length && i < emotionLabels.length; i++) {
+            emotions.put(emotionLabels[i], output[i]);
+        }
+
+        // Log the detected emotion for this second
+        String maxEmotion = getMaxEmotion(emotions);
+        Log.d(TAG, "Second " + secondIndex + ": " + maxEmotion + " (" + emotions.get(maxEmotion) + ")");
+
+        return emotions;
+    }
+
+    private MappedByteBuffer loadModelFile() throws IOException {
+        AssetFileDescriptor fileDescriptor = getAssets().openFd("model.tflite");
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+    }
+
+
+    /**
+     * Get the emotion with the highest confidence value
+     * @param emotions Map of emotions to confidence values
+     * @return The emotion with the highest confidence
+     */
+    private String getMaxEmotion(Map<String, Float> emotions) {
+        String maxEmotion = "";
+        float maxValue = 0;
+
+        for (Map.Entry<String, Float> entry : emotions.entrySet()) {
+            if (entry.getValue() > maxValue) {
+                maxValue = entry.getValue();
+                maxEmotion = entry.getKey();
+            }
+        }
+
+        return maxEmotion;
+    }
+
+    /**
+     * Aggregate emotion results across all seconds
+     * @param secondResults List of emotion maps for each second
+     * @return Map of aggregated emotion confidences
+     */
+    private Map<String, Float> aggregateEmotionResults(List<Map<String, Float>> secondResults) {
+        // Map to store aggregated emotions
+        Map<String, Float> aggregated = new HashMap<>();
+
+        // Get all emotion labels (from the first second, assuming consistent across all)
+        Set<String> emotionLabels = secondResults.get(0).keySet();
+
+        // Initialize aggregated values
+        for (String emotion : emotionLabels) {
+            aggregated.put(emotion, 0.0f);
+        }
+
+        // Sum up all confidence values across seconds
+        for (Map<String, Float> secondResult : secondResults) {
+            for (String emotion : emotionLabels) {
+                aggregated.put(emotion,
+                        aggregated.get(emotion) + secondResult.getOrDefault(emotion, 0.0f));
+            }
+        }
+
+        // Normalize by dividing by the number of seconds
+        for (String emotion : emotionLabels) {
+            aggregated.put(emotion, aggregated.get(emotion) / secondResults.size());
+        }
+
+        return aggregated;
+    }
+
+    /**
+     * Launch the results activity with emotion data
+     * @param secondResults List of emotion maps for each second
+     * @param aggregatedResults Map of aggregated emotion confidences
+     */
+    // In Dashboard.java, modify the launchResultsActivity method
+    private void launchResultsActivity(List<Map<String, Float>> secondResults,
+                                       Map<String, Float> aggregatedResults) {
+        // Get the most prominent emotion overall
+        String dominantEmotion = getMaxEmotion(aggregatedResults);
+        float confidence = aggregatedResults.get(dominantEmotion) * 100; // Convert to percentage
+
+        // Save the emotion data to Firebase
+        FirebaseHelper firebaseHelper = FirebaseHelper.getInstance();
+
+        // Save aggregated results
+        firebaseHelper.savePredictions(aggregatedResults)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Successfully saved emotion data to Firebase");
+
+                    // Launch MoodResult activity after saving data
+                    Intent intent = new Intent(Dashboard.this, MoodResult.class);
+
+                    // Pass the user ID to MoodResult
+                    String userId = firebaseHelper.getCurrentUserId();
+                    intent.putExtra("USER_ID", userId);
+
+                    // Also pass the dominant emotion as a fallback
+                    intent.putExtra("DETECTED_EMOTION", dominantEmotion);
+                    intent.putExtra("CONFIDENCE", confidence);
+
+                    startActivity(intent);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to save emotion data: " + e.getMessage());
+
+                    // Launch MoodResult activity even if saving failed, with intent extras as fallback
+                    Intent intent = new Intent(Dashboard.this, MoodResult.class);
+
+                    // Add the overall detected emotion
+                    intent.putExtra("DETECTED_EMOTION", dominantEmotion);
+                    intent.putExtra("CONFIDENCE", confidence);
+
+                    // Add all emotions with their confidence values as fallback
+                    for (Map.Entry<String, Float> entry : aggregatedResults.entrySet()) {
+                        intent.putExtra("EMOTION_" + entry.getKey().toUpperCase(), entry.getValue() * 100);
+                    }
+
+                    startActivity(intent);
+                });
+    }
 
 
 }

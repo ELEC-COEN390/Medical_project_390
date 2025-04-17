@@ -25,7 +25,7 @@ public class VoskSpeechRecognizer implements RecognitionListener {
     private boolean modelReady = false;
 
     public VoskSpeechRecognizer(Dashboard dashboard) {
-        this.dashboard = dashboard;
+       this.dashboard = dashboard;
         initModel();
     }
 
@@ -35,9 +35,9 @@ public class VoskSpeechRecognizer implements RecognitionListener {
             try {
                 Log.d(TAG, "Starting model initialization");
 
-                // Check if model exists in internal storage
+               // Check if model exists in internal storage
                 File modelDir = new File(dashboard.getFilesDir(), "vosk-model");
-                boolean modelExists = modelDir.exists() && new File(modelDir, "am").exists();
+               boolean modelExists = modelDir.exists() && new File(modelDir, "am").exists();
 
                 if (!modelExists) {
                     // Show a message about model download
@@ -63,13 +63,13 @@ public class VoskSpeechRecognizer implements RecognitionListener {
                             for (String asset : assets) {
                                 Log.d(TAG, "Found asset: " + asset);
                                 if (asset.startsWith("model-")) {
-                                    copyAssetFolder(dashboard.getAssets(), asset, modelDir.getAbsolutePath());
+                                   copyAssetFolder(dashboard.getAssets(), asset, modelDir.getAbsolutePath());
                                     modelExtracted = true;
                                     break;
                                 }
                             }
                         } catch (Exception e) {
-                            Log.e(TAG, "Error checking assets", e);
+                          Log.e(TAG, "Error checking assets", e);
                         }
 
                         if (!modelExtracted) {
@@ -83,13 +83,13 @@ public class VoskSpeechRecognizer implements RecognitionListener {
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error extracting model", e);
-                        dashboard.runOnUiThread(() -> {
+                       dashboard.runOnUiThread(() -> {
                             Toast.makeText(dashboard,
                                     "Error preparing speech model: " + e.getMessage(),
                                     Toast.LENGTH_LONG).show();
                         });
                         return;
-                    }
+                   }
                 }
 
                 // Create model from the directory
@@ -121,7 +121,6 @@ public class VoskSpeechRecognizer implements RecognitionListener {
     // Helper method to copy assets
     private void copyAssetFolder(AssetManager assetManager, String fromAssetPath, String toPath) throws IOException {
         String[] files = assetManager.list(fromAssetPath);
-
         if (files.length == 0) {
             // It's a file, not a folder
             copyAsset(assetManager, fromAssetPath, toPath);
@@ -239,7 +238,6 @@ public class VoskSpeechRecognizer implements RecognitionListener {
 
                 // Create a recognizer with the model
                 Recognizer recognizer = new Recognizer(model, 44100.0f);
-
                 // Process the audio data
                 if (recognizer.acceptWaveForm(audioData, audioData.length)) {
                     String result = recognizer.getResult();

@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.EditText;
@@ -55,6 +56,7 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
     private NavigationView navigationView;
     private Toolbar toolbar;
 
+
     VideoView videoBackground;
 
     private FirebaseHelper db;
@@ -88,17 +90,18 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         // Setup video background
         setupVideoBackground();
 
-        // Welcome message
-        textViewDoctorName.setText("Welcome Doctor");
 
         // Refresh patient list
         buttonRefresh.setOnClickListener(v -> {
             Toast.makeText(this, "Refreshing patient list...", Toast.LENGTH_SHORT).show();
-            // TODO: Fetch unmatched patients from Firebase
+
         });
+
 
         // FAB opens popup menu
         fabAddPatient.setOnClickListener(v -> showCustomActionDialog());
+
+
 
         // Optional: Handle window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.contentContainer), (v, insets) -> {
@@ -194,16 +197,6 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
         if (id == R.id.nav_home) {
             // Already on home screen, just close drawer
             Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-            // Launch settings activity
-            // Intent intent = new Intent(this, SettingsActivity.class);
-            // startActivity(intent);
-        } else if (id == R.id.nav_history) {
-            Toast.makeText(this, "Recording History", Toast.LENGTH_SHORT).show();
-            // Launch history activity
-            // Intent intent = new Intent(this, HistoryActivity.class);
-            // startActivity(intent);
         } else if (id == R.id.nav_matched) {
             fetchMatchedPatients();
         } else if (id == R.id.nav_about) {
@@ -229,75 +222,11 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
     }
 
     private void showCustomActionDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_action, null);
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setCancelable(true)
-                .create();
-
-        Button btnAdd = dialogView.findViewById(R.id.buttonAddPatient);
-        Button btnScan = dialogView.findViewById(R.id.buttonScanQR);
-
-        btnAdd.setOnClickListener(v -> {
-            dialog.dismiss();
-            showAddPatientDialog(); // call the input dialog you already built
-        });
-
-        btnScan.setOnClickListener(v -> {
-            dialog.dismiss();
-            Toast.makeText(this, "Scan QR Code selected", Toast.LENGTH_SHORT).show();
-            String qrData = "";
-            showQRDisplayDialog(qrData);
-        });
-
-        dialog.show();
+        // Show the custom action dialog
+            mAuth = FirebaseAuth.getInstance();
+            showQRDisplayDialog(mAuth.getCurrentUser().getUid());
     }
 
-    private void showAddPatientDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_patient, null);
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setCancelable(false)
-                .create();
-
-        EditText editName = dialogView.findViewById(R.id.editPatientName);
-        EditText editId = dialogView.findViewById(R.id.editPatientId);
-        EditText editAge = dialogView.findViewById(R.id.editPatientAge);
-        Button btnCancel = dialogView.findViewById(R.id.buttonCancel);
-        Button btnSave = dialogView.findViewById(R.id.buttonSave);
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
-
-        btnSave.setOnClickListener(v -> {
-            String name = editName.getText().toString().trim();
-            String id = editId.getText().toString().trim();
-            String age = editAge.getText().toString().trim();
-
-            if (name.isEmpty() || id.isEmpty() || age.isEmpty()) {
-                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Combine data into one string (or just use ID)
-            String qrData = "Patient ID: " + id + "\nName: " + name + "\nAge: " + age;
-
-            ImageView qrImage = dialogView.findViewById(R.id.imageViewQRCode);
-
-            try {
-                BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-                Bitmap bitmap = barcodeEncoder.encodeBitmap(qrData, BarcodeFormat.QR_CODE, 400, 400);
-                qrImage.setImageBitmap(bitmap);
-                qrImage.setVisibility(View.VISIBLE); // Show the QR after generation
-            } catch (WriterException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Error generating QR", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        dialog.show();
-    }
 
     private void showQRDisplayDialog(String qrData) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_show_qr, null);
@@ -400,23 +329,9 @@ public class DoctorDashboard extends AppCompatActivity implements NavigationView
     // Implement the OnPatientClickListener interface method
     @Override
     public void onPatientClick(Patient patient, int position) {
-        Toast.makeText(this, "Patient selected", Toast.LENGTH_SHORT).show();
 
-        // Check if we're viewing unmatched patients
-        String currentView = textViewDoctorName.getText().toString();
-
-        if (currentView.equals("Unmatched Patients")) {
-            // If viewing unmatched patients, show confirmation dialog for assignment
-                            db.assignPatientToDoctor(patient.getId(), patient.getEmail());
-        } else {
-            // If viewing matched patients, show patient details
-            // Jasper's part - intent to another activity
-            // Example:
-/*            Intent intent = new Intent(this, PatientDetailActivity.class);
-            intent.putExtra("PATIENT_ID", patient.getId());
-            intent.putExtra("PATIENT_EMAIL", patient.getEmail());
-            startActivity(intent);*/
-        }
+        Intent intent = new Intent(this, historyActivity.class);
+        startActivity(intent);
     }
 
 

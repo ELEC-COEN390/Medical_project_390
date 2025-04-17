@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.moodproject">
 
+    <!-- Camera permissions -->
+
+
     <!-- Network permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -20,6 +23,10 @@
 
     <!-- Audio recording permission -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Audio recording permission -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -72,6 +79,15 @@
             android:name=".DoctorDashboard"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".historyActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MoodResult"
+            android:exported="false" />
+
 
     </application>
 </manifest>
