@@ -46,7 +46,7 @@ public class MoodResult extends AppCompatActivity {
     private ImageButton mood3;
 
     // Map to store mood accuracies
-    private Map<String, Double> moodAccuracies = new HashMap<>();
+    private final Map<String, Double> moodAccuracies = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

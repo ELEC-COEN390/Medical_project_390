@@ -21,7 +21,7 @@ public class MFCCExtractor {
     private static final int N_MELS = 284;         // Match NUM_MFCC for consistency
     private static final int EXPECTED_FRAMES = 30; // Exactly match your model input frames
 
-    private Context context;
+    private final Context context;
 
     public MFCCExtractor(Context context) {
         this.context = context;

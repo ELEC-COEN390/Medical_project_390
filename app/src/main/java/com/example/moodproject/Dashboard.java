@@ -133,7 +133,7 @@ public class Dashboard extends AppCompatActivity implements NavigationView.OnNav
     private static final int PERMISSION_REQUEST_CODE = 200;
 
     private String sentence;
-    private String[] requiredPermissions = {
+    private final String[] requiredPermissions = {
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_NETWORK_STATE,
             Manifest.permission.ACCESS_WIFI_STATE,

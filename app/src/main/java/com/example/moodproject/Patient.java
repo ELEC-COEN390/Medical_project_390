@@ -1,8 +1,8 @@
 package com.example.moodproject;
 
 public class Patient{
-    private String id;
-    private String email;
+    private final String id;
+    private final String email;
 
 
     public Patient(String id, String email) {

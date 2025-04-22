@@ -20,8 +20,8 @@ import java.util.Map;
 public class FirebaseHelper {
 
     private static FirebaseHelper instance;
-    private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
+    private final FirebaseAuth mAuth;
+    private final DatabaseReference mDatabase;
 
     // Reference to doctor_assignments node in Firebase
     private static final String DOCTOR_ASSIGNMENTS = "doctor_assignments";
