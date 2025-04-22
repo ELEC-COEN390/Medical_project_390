@@ -11,7 +11,7 @@ import java.util.List;
 
 public class PatientAdapter extends RecyclerView.Adapter<PatientAdapter.PatientViewHolder> {
 
-    private List<Patient> patientList;
+    private final List<Patient> patientList;
     private OnPatientClickListener onPatientClickListener;
 
     // Interface for click listener

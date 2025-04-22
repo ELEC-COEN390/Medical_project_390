@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    tools:context=".MainActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_dark">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/background_dark"
+            app:title="Emotion Tracker"
+            app:titleTextColor="@color/white" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- ONE single direct child for NestedScrollView -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Date selector -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <ImageButton
+                    android:id="@+id/btn_previous_day"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_arrow_left"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:id="@+id/tv_current_date"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="April 4, 2025"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/btn_next_day"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_arrow_right"
+                    app:tint="@color/white" />
+            </LinearLayout>
+
+            <!-- Time header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Emotions"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/time_header_scroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- 24 hours -->
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="12AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="1AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="2AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="3AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="4AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="5AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="6AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="7AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="8AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="9AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="10AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="11AM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="12PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="1PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="2PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="3PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="4PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="5PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="6PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="7PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="8PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="9PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="10PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="11PM" android:gravity="center" android:textColor="@color/white_70" android:textSize="12sp" />
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Emotion rows -->
+            <!-- Neutral row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/gray"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Neutral"
+                        android:textColor="@color/gray"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/neutral_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/neutral_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Calm row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/teal"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Calm"
+                        android:textColor="@color/teal"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/calm_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/calm_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Happy row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/yellow"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Happy"
+                        android:textColor="@color/yellow"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/happy_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/happy_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Sad row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/blue"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sad"
+                        android:textColor="@color/blue"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/sad_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/sad_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Angry row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/red"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Angry"
+                        android:textColor="@color/red"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/angry_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/angry_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Fearful row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/purple"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fearful"
+                        android:textColor="@color/purple"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/fearful_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/fearful_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Disgust row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/green"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Disgust"
+                        android:textColor="@color/green"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/disgust_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/disgust_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Surprised row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/circle_shape"
+                        android:backgroundTint="@color/orange"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Surprised"
+                        android:textColor="@color/orange"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <com.example.history.SynchronizedScrollView
+                    android:id="@+id/surprised_scroll_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/surprised_timeline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+                        <!-- 24 hour slots - will be filled programmatically -->
+                    </LinearLayout>
+                </com.example.history.SynchronizedScrollView>
+            </LinearLayout>
+
+            <!-- Legend -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Intensity: "
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@drawable/intensity_low"
+                    android:layout_marginStart="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Low"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="4dp"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@drawable/intensity_medium"
+                    android:layout_marginStart="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Medium"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="4dp"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@drawable/intensity_high"
+                    android:layout_marginStart="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="High"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="4dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Add Emotion button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_emotion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Record New Emotion"
+                android:textAllCaps="false"
+                app:cornerRadius="8dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

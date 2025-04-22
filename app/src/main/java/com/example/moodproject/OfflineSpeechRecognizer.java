@@ -29,7 +29,7 @@ import java.util.Locale;
 public class OfflineSpeechRecognizer {
     private static final String TAG = "OfflineSpeechRecognizer";
 
-    private Dashboard dashboard;
+    private final Dashboard dashboard;
     private SpeechRecognizer speechRecognizer;
     private boolean isOfflineAvailable;
 

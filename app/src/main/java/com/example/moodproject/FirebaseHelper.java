@@ -2,7 +2,6 @@ package com.example.moodproject;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -12,18 +11,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.android.gms.tasks.Tasks;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public class FirebaseHelper {
 
     private static FirebaseHelper instance;
-    private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
+    private final FirebaseAuth mAuth;
+    private final DatabaseReference mDatabase;
 
     // Reference to doctor_assignments node in Firebase
     private static final String DOCTOR_ASSIGNMENTS = "doctor_assignments";
@@ -35,12 +33,19 @@ public class FirebaseHelper {
     public interface PreferencesCallback {
         void onPreferencesLoaded(UserPreferences preferences);
         void onError(String errorMessage);
+
     }
 
     public interface TypeCallback{
         void onTypesLoaded(UserType Type);
         void onError(String errorMessage);
     }
+
+    public interface NameCallback{
+        void onNameLoaded(String name);
+        void onError(String errorMessage);
+    }
+
 
     public interface DoctorAssignmentCallback {
         void onAssignmentComplete(boolean success);
@@ -56,6 +61,13 @@ public class FirebaseHelper {
         void onDoctorsLoaded(List<DoctorAssignment> doctors);
         void onError(String errorMessage);
     }
+
+    // Add this interface to FirebaseHelper.java
+    public interface EmotionDataCallback {
+        void onEmotionsLoaded(Map<String, Float> emotions);
+        void onError(String errorMessage);
+    }
+
 
 
     private FirebaseHelper() {
@@ -149,6 +161,92 @@ public class FirebaseHelper {
 
         // Save as UserType object instead of just the string
         return mDatabase.child("user_type").child(userId).setValue(type);
+    }
+
+    public Task<Void> saveUserName(String name){
+        return mDatabase.child("users").child(getCurrentUserId()).child("name").setValue(name);
+    }
+
+    public void getUserName(NameCallback callback) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            callback.onError("User not authenticated");
+            return;
+        }
+
+        mDatabase.child("users").child(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            // Check if the value is a string
+                            if (snapshot.getValue() instanceof String) {
+                                String nameStr = snapshot.getValue(String.class);
+                                callback.onNameLoaded(nameStr);
+                            } else {
+                                callback.onNameLoaded("");
+                            }
+                        } else {
+                            callback.onNameLoaded("");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+    }
+
+    public void getPredictions(EmotionDataCallback callback) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            callback.onError("User not authenticated");
+            return;
+        }
+
+        mDatabase.child("prediction").child(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            try {
+                                // Try to convert the data to a Map<String, Float>
+                                Map<String, Float> emotions = new HashMap<>();
+
+                                for (DataSnapshot emotionSnapshot : snapshot.getChildren()) {
+                                    String emotion = emotionSnapshot.getKey();
+                                    Float value = emotionSnapshot.getValue(Float.class);
+                                    if (emotion != null && value != null) {
+                                        emotions.put(emotion, value);
+                                    }
+                                }
+
+                                callback.onEmotionsLoaded(emotions);
+                            } catch (Exception e) {
+                                callback.onError("Error parsing emotion data: " + e.getMessage());
+                            }
+                        } else {
+                            callback.onEmotionsLoaded(new HashMap<>());
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        callback.onError(error.getMessage());
+                    }
+                });
+    }
+
+    public Task<Void> savePredictions(Map<String, Float> emotions){
+
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("User not authenticated");
+        }
+
+        return mDatabase.child("prediction").child(userId).setValue(emotions);
     }
 
     public Task<Void> saveUserPreferences(UserPreferences preferences) {
