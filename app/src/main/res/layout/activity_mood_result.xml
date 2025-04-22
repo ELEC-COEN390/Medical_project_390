@@ -68,39 +68,39 @@
         app:cardCornerRadius="30dp"
         app:cardElevation="8dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="155dp"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="24dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="155dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="24dp">
 
-                    <ImageButton
-                        android:id="@+id/mood1"
-                        android:layout_width="79dp"
-                        android:layout_height="78dp"
-                        android:layout_marginEnd="8dp"
-                        android:clickable="true"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/crying_face_1f622" /> <!-- optional spacing between emojis -->
+            <ImageButton
+                android:id="@+id/mood1"
+                android:layout_width="79dp"
+                android:layout_height="78dp"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:scaleType="centerInside"
+                android:src="@drawable/crying_face_1f622" /> <!-- optional spacing between emojis -->
 
-                    <ImageButton
-                        android:id="@+id/mood2"
-                        android:layout_width="78dp"
-                        android:layout_height="79dp"
-                        android:layout_marginEnd="8dp"
-                        android:scaleType="centerInside"
-                        android:clickable="true"
-                        android:src="@drawable/fearful_face_1f628" />
+            <ImageButton
+                android:id="@+id/mood2"
+                android:layout_width="78dp"
+                android:layout_height="79dp"
+                android:layout_marginEnd="8dp"
+                android:scaleType="centerInside"
+                android:clickable="true"
+                android:src="@drawable/fearful_face_1f628" />
 
-                    <ImageButton
-                        android:id="@+id/mood3"
-                        android:layout_width="78dp"
-                        android:layout_height="82dp"
-                        android:scaleType="centerInside"
-                        android:clickable="true"
-                        android:src="@drawable/nauseated_face_1f922" />
-                </LinearLayout>
+            <ImageButton
+                android:id="@+id/mood3"
+                android:layout_width="78dp"
+                android:layout_height="82dp"
+                android:scaleType="centerInside"
+                android:clickable="true"
+                android:src="@drawable/nauseated_face_1f922" />
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
